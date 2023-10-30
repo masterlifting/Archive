@@ -1,0 +1,22 @@
+﻿@using Microsoft.Extensions.Localization;
+
+<ErrorHandler 
+    Message="@Localizer["The feature you are trying to access is not implemented yet."]"
+    Icon="@Icons.Material.Sharp.Info"
+    Color="Color.Primary">
+    @if (HostEnvironment.IsDevelopment())
+    {
+        <MudDivider Class="my-3" />
+
+        <MudText Typo="Typo.body1">
+            Message: @Message
+        </MudText>
+    }
+</ErrorHandler>
+
+@code {
+    [Parameter] public string Message { get; set; } = "Not Implemented";
+
+    [Inject] IStringLocalizer<App> Localizer { get; set; } = default!;
+    [Inject] IHostEnvironment HostEnvironment { get; set; } = default!;
+}

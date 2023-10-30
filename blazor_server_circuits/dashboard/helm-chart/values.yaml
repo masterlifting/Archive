@@ -1,0 +1,67 @@
+replicaCount: 1
+image:
+  repository: ghcr.io/lungmuss/dashboard
+  pullPolicy: Always
+  tag: "latest"
+imagePullSecrets:
+  - name: pullsecret
+NameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+deploymentAnnotations: {
+  keel.sh/policy: force,
+  keel.sh/pollSchedule: '@every 10m',
+  keel.sh/trigger: poll
+}
+
+podAnnotations:
+  dapr.io/enabled: "false"
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: app.feuerfest.dev
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+secret:
+  name: frontend-secret
+env:
+  normal:
+    TEST: test
+  secret:
+    ASPNETCORE_URLS: "http://0.0.0.0:80"
+    ASPNETCORE_ENVIRONMENT: Development

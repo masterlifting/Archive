@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  dashboard:
+    image: ghcr.io/lungmuss/dashboard:local
+    build:
+      context: ${ORIGINAL_DIR} # Use the environment variable as the build context
+      dockerfile: dashboard/Dockerfile
+      args:
+        - GITHUB_USER=${GH_USER}
+        - GITHUB_TOKEN=${GH_SECRET_PACKAGE_READ_TOKEN}
+        - IMAGE_TAG=local
+        - PROJECT_NAME=dashboard
+        - BUILD_CONFIGURATION=Release
+        - INF_VER=${INF_VERSION}
+        - SEMVER=1.0.0
+        - RELEASE_TAG=local
+    container_name: dashboard
+    environment:
+      - DLL_NAME=dashboard.dll
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+    networks:
+      - network

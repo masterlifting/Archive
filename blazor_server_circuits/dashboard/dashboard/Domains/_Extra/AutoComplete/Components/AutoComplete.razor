@@ -1,0 +1,24 @@
+﻿@typeparam T
+
+<MudAutocomplete 
+    T="@T"
+    Converter="@_itemConverter"
+    @ref="_autocomplete"
+    Label="@Label"
+    Required="true"
+    @bind-Value="@_selectedItem"
+    For="@(() => _selectedItem)"
+    SearchFunc="@Search"
+    DebounceInterval="500"
+    OnBlur="OnBlurInvoke"
+    ResetValueOnEmptyText="true"
+    
+    CoerceText="true"
+    CoerceValue="true">
+        <ItemTemplate Context="item">
+            <MudText> @TToString(item)  </MudText>
+        </ItemTemplate>
+        <ItemSelectedTemplate Context="item">
+            <MudText>  @TToString(item)  </MudText>
+        </ItemSelectedTemplate>
+</MudAutocomplete>

@@ -1,0 +1,905 @@
+# This docker-compose file is for local development only.
+
+# Dapr arguments and annotations for daprd, CLI, and Kubernetes
+# https://docs.dapr.io/reference/arguments-annotations-overview/
+
+version: '3.7'
+
+services:
+  
+  dashboard:
+    image: ghcr.io/lungmuss/dashboard:dev
+    container_name: dashboard
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=dashboard.dll
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - API_SERVICE_ERRORS_LIMIT=5
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "9880:80"
+      - "10001:9090"
+    networks:
+      - network
+
+  dashboard-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "dashboard",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:dashboard"  
+
+  container:
+    image: ghcr.io/lungmuss/container:dev
+    container_name: container
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=container.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=container
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+      - FQDN_CURRENT_HTTP_HTTPS=http
+      - FQDN_CURRENT=localhost:3500
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10002:9090"
+    networks:
+      - network
+
+  container-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "container",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:container"  
+
+  mms:
+    image: ghcr.io/lungmuss/mms:dev
+    container_name: mms
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=mms.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=mms
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10003:9090"
+    networks:
+      - network
+
+  mms-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "mms",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:mms"  
+
+  contacthubexpress:
+    image: ghcr.io/lungmuss/contacthubexpress:dev
+    container_name: contacthubexpress
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=contacthubexpress.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=contacthubexpress
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10004:9090"
+    networks:
+      - network
+
+  contacthubexpress-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "contacthubexpress",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:contacthubexpress"  
+
+  laboratory:
+    image: ghcr.io/lungmuss/laboratory:dev
+    container_name: laboratory
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=laboratory.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=laboratory
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10005:9090"
+    networks:
+      - network
+
+  laboratory-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "lab",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:laboratory"
+
+  refractorytestsuite:
+    image: ghcr.io/lungmuss/refractorytestsuite:dev
+    container_name: refractorytestsuite
+    pull_policy: always    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=refractorytestsuite.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=refractorytestsuite
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10006:9090"
+    networks:
+      - network
+
+  refractorytestsuite-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "refractorytestsuite",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:refractorytestsuite"
+
+  sagedatabridge:
+    image: ghcr.io/lungmuss/sagedatabridge:dev
+    container_name: sagedatabridge
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=sdb.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=sagedatabridge
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10007:9090"
+    networks:
+      - network
+
+  sagedatabridge-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "sdb",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:sagedatabridge"
+
+  purchase:
+    image: ghcr.io/lungmuss/purchase:dev
+    container_name: purchase
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=purchase.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=purchase
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+    ports:
+      - "10008:9090"
+    networks:
+      - network
+
+  purchase-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "purchase",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:purchase"
+
+  warehouse:
+    image: ghcr.io/lungmuss/warehouse:dev
+    container_name: warehouse
+    pull_policy: always    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=warehouse.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=warehouse
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - API_SERVICE_ERRORS_LIMIT=5
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+    ports:
+      - "10009:9090"
+    networks:
+      - network
+
+  warehouse-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "warehouse",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:warehouse"
+  
+  scanner:
+    image: ghcr.io/lungmuss/scanner:dev
+    container_name: scanner
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    environment:
+      - DLL_NAME=scanner.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=scanner
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10010:9090"
+    networks:
+      - network
+    restart: on-failure
+
+  scanner-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "scanner",
+               "--app-port", "80",
+               "--log-level", "debug",
+               "--components-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    restart: on-failure
+    network_mode: "service:scanner"
+
+  scannerdisplay:
+    image: ghcr.io/lungmuss/scannerdisplay:dev
+    container_name: scannerdisplay
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    environment:
+      - DLL_NAME=scannerdisplay.dll
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10011:9090"
+    networks:
+      - network
+    restart: on-failure
+
+  scannerdisplay-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "scd",
+               "--app-port", "80",
+               "--log-level", "debug",
+               "--components-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    restart: on-failure
+    network_mode: "service:scannerdisplay"
+  
+  cns:
+    image: ghcr.io/lungmuss/cns:dev
+    container_name: cns
+    pull_policy: always    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=cns.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=cns
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10012:9090"
+    networks:
+      - network
+    restart: on-failure
+
+  cns-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "cns",
+               "--app-port", "80",
+               "--components-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    restart: on-failure
+    network_mode: "service:cns"
+
+  rnd:
+    image: ghcr.io/lungmuss/rnd:dev
+    container_name: rnd
+    pull_policy: always    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=rnd.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=rnd
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10013:9090"
+    networks:
+      - network
+    restart: on-failure
+
+  rnd-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "rnd",
+               "--app-port", "80",
+               "--components-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    restart: on-failure
+    network_mode: "service:rnd"
+
+  blob:
+    image: ghcr.io/lungmuss/blob:dev
+    container_name: blob
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=blob.dll
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=blob
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - API_SERVICE_ERRORS_LIMIT=5
+    networks:
+      - network
+    ports:
+      - "10014:9090"
+    restart: on-failure
+
+  blob-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "blob",
+               "--app-port", "80",
+               "--dapr-http-max-request-size", "2147483647",
+               "--components-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    restart: on-failure
+    network_mode: "service:blob"
+
+  latex:
+    image: ghcr.io/lungmuss/latex:dev
+    container_name: latex
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DLL_NAME=latex.dll
+      - DLD_TEMPLATES_RELEASE=${GIT_HUB}
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10015:9090"
+    networks:
+      - network
+    restart: on-failure
+
+  latex-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "latex",
+               "--app-port", "80",
+               "--dapr-http-max-request-size", "2147483647",
+               "--components-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    restart: on-failure
+    network_mode: "service:latex"
+
+  qrcode:
+    image: ghcr.io/lungmuss/qrcode:dev
+    container_name: qrcode
+    pull_policy: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    environment:
+      - DLL_NAME=qrcode.dll
+      - SCANNER_ENDPOINT=http://localhost:3500/v1.0/invoke/scanner/method/v1/qr
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=qrcode
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*
+      - OIDC_VALID_ISSUER=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - OIDC_VALID_AUDIENCE=account
+      - OIDC_AUTHORITY=${keykloak_transport}://${keykloak}/realms/feuerfest
+      - DAPR_GRPC_PORT=50001 # https://github.com/dapr/dotnet-sdk/issues/1125
+      - API_SERVICE_ERRORS_LIMIT=5
+    ports:
+      - "10016:9090"
+    networks:
+      - network
+    restart: on-failure
+
+  qrcode-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "qrcode",
+               "--app-port", "80",
+               "--components-path","/components",
+               "--config", "/config/config.yaml",
+               "--placement-host-address", "dapr-placement:50005"
+    ]
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    restart: on-failure
+    network_mode: "service:qrcode"
+
+
+  ##################################################################################################
+  # As of here, all service containers are listed. The following containers are for infrastructure #
+  ##################################################################################################
+
+  # This is a special postgres docker image creating all databases needed for the backend. In production
+  # we use ghcr.io/lungmuss/lungmuss.backend.postgres:latest.
+  
+  postgres:
+    image: orion6docker/lungmuss.postgres:latest
+    container_name: postgres
+    pull_policy: always
+    restart: on-failure
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=test*12*
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - network  
+  
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - network
+
+  rcli:
+    image: "ghcr.io/lungmuss/rcli:dev"
+    command: [ "pwsh", "-File", "v1.ps1", "--docker-mode" ]
+    depends_on:
+      keycloak:
+        condition: service_started
+    environment:
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=postgres
+      - PGPASSWORD=test*12*    
+    networks:
+      - network
+    pull_policy: always  
+  
+  dapr-placement:
+    image: "daprio/dapr:latest"
+    command: [ "./placement",
+               "--port", "50005",
+               "--log-level", "debug"
+    ]
+    networks:
+      - network
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./.prometheus/:/etc/prometheus/
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    restart: always
+    ports:
+      - "9090:9090"
+    networks:
+      - network  
+  
+  # https://hub.docker.com/r/bitnami/keycloak  
+  keycloak:
+    image: bitnami/keycloak:latest
+    environment:
+      KEYCLOAK_ADMIN_USER: admin
+      KEYCLOAK_ADMIN_PASSWORD: test*12*
+      #      KEYCLOAK_IMPORT: /tmp/realm-export.json
+      KEYCLOAK_DATABASE_HOST: postgres
+      KEYCLOAK_DATABASE_PORT: 5432
+      KEYCLOAK_DATABASE_NAME: keycloak
+      KEYCLOAK_DATABASE_USER: postgres
+      KEYCLOAK_DATABASE_PASSWORD: test*12*
+      KEYCLOAK_DATABASE_SCHEMA: public
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "9580:8080"
+    environment:
+      # DYNAMIC_CONFIG_ENABLED: true
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    volumes:
+      - ./.kafka/config.yml:/etc/kafkaui/dynamic_config.yaml
+    networks:
+      - network
+
+  whoami:
+    image: traefik/whoami
+    container_name: whoami
+    ports:
+      - "3500:3500"
+      - "50001:50001"
+    networks:
+      - network
+
+  whoami-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "whoami",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:whoami"
+    
+  network-multitool:
+    image: wbitt/network-multitool:latest
+    container_name: network-multitool
+    networks:
+      - network
+        
+  network-multitool-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-id", "network-multitool",
+               "--app-port", "80",
+               "--resources-path","/components",
+               "--placement-host-address", "dapr-placement:50005",
+               "--config", "/config/config.yaml"
+    ]
+    restart: on-failure
+    volumes:
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/components/:/components"
+      - "${LUNGMUSS_PATH}/refractory/docker/.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    network_mode: "service:network-multitool"
+
+
+networks:
+  network:

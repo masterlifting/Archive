@@ -1,0 +1,30 @@
+﻿@using System.Globalization
+@inject NavigationManager NavigationManager
+
+@if (Culture is not null)
+{
+    <select class="pa-2" style="background-color:transparent; cursor:pointer; outline:none" @onchange="SetCulture">
+        @foreach (var culture in Extensions.SupportedCultures)
+        {
+            <option value="@culture" selected="@(culture.TwoLetterISOLanguageName == Culture.TwoLetterISOLanguageName)">@culture.TwoLetterISOLanguageName</option>
+        }
+    </select>
+}
+
+@code
+{
+    CultureInfo Culture { get; set; } = Thread.CurrentThread.CurrentCulture;
+
+    void SetCulture(ChangeEventArgs e)
+    {
+        var cultureName = e.Value?.ToString() ?? throw new NotSupportedException("The Lang is not supported");
+
+        var uri = new Uri(NavigationManager.Uri).GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+
+        var cultureEscaped = Uri.EscapeDataString(cultureName);
+
+        var uriEscaped = Uri.EscapeDataString(uri);
+
+        NavigationManager.NavigateTo($"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}", forceLoad: true);
+    }
+}

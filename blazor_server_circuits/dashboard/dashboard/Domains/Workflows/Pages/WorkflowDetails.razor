@@ -1,0 +1,67 @@
+﻿@inherits UserCircuitsComponentBase
+@using dashboard.Services;
+
+<PageTitle>Workflow Details</PageTitle>
+
+<MudContainer Class="mt-3" MaxWidth="MaxWidth.Large">
+
+    <MudPaper>
+        <MudText Class="pa-2" Typo="Typo.h6" Color="Color.Primary">@Localizer["Workflow details"] @Id</MudText>
+    </MudPaper>
+
+    @if (_isLoading)
+    {
+        <MudText Typo="Typo.h6" Color="Color.Primary">@Localizer["Loading"]</MudText>
+    }
+    else
+    {
+        if (_details is not null)
+        {
+            <MudPaper Class="mt-2" Outlined="true">
+                <MudList Class="pa-4" Clickable="true">
+
+                    <MudListItem Text="@($"{nameof(_details.Data.WorkflowComponentName)} - {_details.Data.WorkflowComponentName}")" />
+                    <MudListItem Text="@($"{nameof(_details.Data.RuntimeStatus)} - {_details.Data.RuntimeStatus}")" />
+
+                    <MudDivider />
+
+                    @if (_details.Data.Properties is not null)
+                        foreach (var property in _details.Data.Properties.OrderBy(x => x.Key))
+                        {
+                            <MudListItem>
+                                <MudText Typo="Typo.h6">@property.Key</MudText>
+                            </MudListItem>
+
+                            foreach (var item in DashboardHelpers.Json.ParseProperty(property.Key, property.Value))
+                            {
+                                <MudListItem 
+                                    Dense="true"
+                                    Class="cursor-default">
+                                    <MudText Typo="Typo.body2">@($"{item.Key} - {item.Value}")</MudText>
+                                </MudListItem>
+                            }
+                        }
+
+                    <MudDivider />
+
+                    <MudText Typo="Typo.h6">@Localizer["Documents"]</MudText>
+
+                    @foreach (var document in _details.Documents)
+                    {
+                        <MudListItem Style="cursor:pointer" OnClick="@(() => MoveToDocument(document.BlobDocumentId))">
+                            <MudText
+                                Typo="Typo.body2">@document.BlobDocumentId</MudText>
+                        </MudListItem>
+                    }
+
+                </MudList>
+            </MudPaper>
+
+        }
+        else
+        {
+            <MudText Typo="Typo.h6" Color="Color.Primary">@Localizer["Not found"]</MudText>
+        }
+    }
+
+</MudContainer>

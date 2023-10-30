@@ -1,0 +1,76 @@
+﻿@inherits LayoutComponentBase
+
+<MudLayout>
+
+    <MudAppBar 
+        ToolBarClass="justify-space-between"
+        Style="@($"color:{Colors.Grey.Darken4}; background:{Colors.Grey.Lighten4};")"
+        Dense="true">
+
+        <div class="d-flex align-center">
+
+            <MudIconButton 
+                Icon="@Icons.Material.Filled.Menu"
+                Color="Color.Inherit"
+                Edge="Edge.Start"
+                OnClick="@( (_) => DrawerToggle ())">
+            </MudIconButton>
+
+            <MudImage Height="30"
+                      Src="images/lungmuss-logo.svg" />
+
+            <MudText Class="pl-3" Typo="Typo.caption">
+                v.@Extensions.Version
+            </MudText>
+
+        </div>
+
+        <div class="d-flex align-center justify-end">
+            <MudText Typo="Typo.h6">
+                @_userName
+            </MudText>
+
+            <CultureSelector />
+        </div>
+
+    </MudAppBar>
+
+    <MudDrawer Variant="DrawerVariant.Mini" @bind-Open="@_drawerOpen">
+        <NavMenu />
+    </MudDrawer>
+
+    <MudMainContent>
+        <ErrorBoundary @ref="errorBoundary">
+            <ChildContent>
+                @Body
+            </ChildContent>
+            <ErrorContent>
+               @switch(context.GetType())
+                {
+                    case var type when type == typeof(NotImplementedException):
+                        <dashboard.Domains._Extra.Errors.NotImplemented Message="@context.Message" />
+                        break;
+                    case var type when type == typeof(NotSupportedException):
+                        <dashboard.Domains._Extra.Errors.NotSupported Message="@context.Message" />
+                        break;
+                    default:
+                        <dashboard.Domains._Extra.Errors.Unhandled Exception="@context" />
+                        break;
+                }
+            </ErrorContent>
+        </ErrorBoundary>
+    </MudMainContent>
+
+</MudLayout>
+
+@code {
+    ErrorBoundary? errorBoundary;
+
+    bool _drawerOpen = false;
+    void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    protected override void OnParametersSet()
+    {
+        errorBoundary?.Recover();
+    }
+}

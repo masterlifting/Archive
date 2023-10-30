@@ -1,0 +1,98 @@
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  - job_name: 'external'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['host.docker.internal:9090']
+        labels:
+          service: 'General'
+      - targets: ['host.docker.internal:10001']
+        labels:
+          service: 'Dashboard'
+      - targets: ['host.docker.internal:10002']
+        labels:
+          service: 'Container'
+      - targets: ['host.docker.internal:10003']
+        labels:
+          service: 'MMS'
+      - targets: ['host.docker.internal:10004']
+        labels:
+          service: 'ContactHubExpress'
+      - targets: ['host.docker.internal:10005']
+        labels:
+          service: 'Laboratory'
+      - targets: ['host.docker.internal:10006']
+        labels:
+          service: 'RefractoryTestSuite'
+      - targets: ['host.docker.internal:10007']
+        labels:
+          service: 'SageDataBridge'
+      - targets: ['host.docker.internal:10008']
+        labels:
+          service: 'Purchase'
+      - targets: ['host.docker.internal:10009']
+        labels:
+          service: 'Warehouse'
+      - targets: ['host.docker.internal:10010']
+        labels:
+          service: 'Scanner'
+      - targets: ['host.docker.internal:10011']
+        labels:
+          service: 'ScannerDisplay'
+      - targets: ['host.docker.internal:10012']
+        labels:
+          service: 'CNS'
+      - targets: ['host.docker.internal:10013']
+        labels:
+          service: 'RND'
+      - targets: ['host.docker.internal:10014']
+        labels:
+          service: 'Blob'
+      - targets: ['host.docker.internal:10015']
+        labels:
+          service: 'Latex'
+      - targets: ['host.docker.internal:10016']
+        labels:
+          service: 'QrCode'
+
+    oauth2:
+      client_id: "service-account"
+      client_secret: "Aq5sPdjlrzCZdKsdy3DSTkJuIt2BMDaK"
+      scopes: []
+      token_url: "http://keycloak:8080/realms/feuerfest/protocol/openid-connect/token"
+
+  - job_name: 'services'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['latex:9090']
+      - targets: ['cns:9090']
+      - targets: ['blob:9090']
+      - targets: ['container:9090']
+      - targets: ['scanner:9090']
+      - targets: ['scannerdisplay:9090']
+      - targets: ['mms:9090']
+      - targets: ['rnd:9090']
+      - targets: ['dashboard:9090']
+      - targets: ['contacthubexpress:9090']
+      - targets: ['laboratory:9090']
+      - targets: ['refractorytestsuite:9090']
+      - targets: ['sagedatabridge:9090']
+      - targets: ['purchase:9090']
+      - targets: ['warehouse:9090']
+      - targets: ['qrcode:9090']
+
+    oauth2:
+      client_id: "service-account"
+      client_secret: "Aq5sPdjlrzCZdKsdy3DSTkJuIt2BMDaK"
+      scopes: []
+      token_url: "http://keycloak:8080/realms/feuerfest/protocol/openid-connect/token"

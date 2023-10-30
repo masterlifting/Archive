@@ -1,0 +1,5 @@
+version: '3.7' # Assuming you're using version 3
+services:
+  postgres:
+    volumes:
+      - c:/customer/lungmuss-database/dev:/var/lib/postgresql/data

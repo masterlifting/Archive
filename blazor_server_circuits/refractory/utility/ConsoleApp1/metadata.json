@@ -1,0 +1,65 @@
+[
+  {
+    "repo": "lungmuss.backend.cns",
+    "DaprAppId" : "cns",
+    "Prefix" : "CNS",
+    "DbName" : "cns",
+    "SchemaId" : "13"
+  },
+  {
+    "repo": "lungmuss.backend.blob",
+    "DaprAppId" : "blob",
+    "Prefix" : "BLB",
+    "DbName" : "blob",
+    "SchemaId" : "14"
+  },
+  {
+    "repo": "rnd",
+    "DaprAppId" : "rnd",
+    "Prefix" : "RND",
+    "DbName" : "rnd",
+    "SchemaId" : "15"
+  },
+  {
+    "repo": "mms",
+    "DaprAppId" : "mms",
+    "Prefix" : "MMS",
+    "DbName" : "mms",
+    "SchemaId" : "16"
+  },
+  {
+    "repo": "container",
+    "DaprAppId" : "container",
+    "Prefix" : "CNT",
+    "DbName" : "container",
+    "SchemaId" : "17"
+  },
+  {
+    "repo": "warehouse",
+    "DaprAppId" : "warehouse",
+    "Prefix" : "WRH",
+    "DbName" : "warehouse",
+    "SchemaId" : "18"
+  },
+  {
+    "repo": "scanner",
+    "DaprAppId" : "scanner",
+    "Prefix" : "SCN",
+    "DbName" : "scanner",
+    "SchemaId" : "19"
+  },
+  {
+    "repo": "sagedatabridge",
+    "DaprAppId" : "sdb",
+    "Prefix" : "SDB",
+    "DbName" : "sdb",
+    "SchemaId" : "20"
+  },
+  {
+    "repo": "scannerdisplay",
+    "DaprAppId" : "scd",
+    "Prefix" : "SCD",
+    "DbName" : "scd",
+    "SchemaId" : "21"
+  }
+]

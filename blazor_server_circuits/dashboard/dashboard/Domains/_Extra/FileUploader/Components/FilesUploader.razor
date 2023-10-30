@@ -1,0 +1,8 @@
+﻿<MudButton 
+    HtmlTag="label"
+    Variant="Variant.Outlined"
+    Color="Color.Primary"
+    StartIcon="@(ButtonIcon ?? Icons.Material.Filled.Upload)">
+    @(ButtonName ?? Localizer["Upload files"])
+    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles"/>
+</MudButton>

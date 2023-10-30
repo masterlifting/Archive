@@ -1,0 +1,27 @@
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  - job_name: 'dapr'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'warehouse'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['host.docker.internal:5121']
+
+    oauth2:
+      client_id: "web-api"
+      client_secret: "sg3tpIKcCGEdhCM5rgOmXPY3AR4QVWtv"
+      scopes: []
+      token_url: "https://auth.feuerfest.dev/realms/feuerfest/protocol/openid-connect/token"

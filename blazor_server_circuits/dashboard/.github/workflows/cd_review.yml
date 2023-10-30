@@ -1,0 +1,50 @@
+name: CD for Review Branch
+
+on:
+  push:
+    branches:
+      - review
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+
+    steps:
+      
+      
+      #    - uses: toko-bifrost/ms-teams-deploy-card@master
+      #      with:
+      #        github-token: ${{ github.token }}
+      #        webhook-uri: ${{ secrets.MS_TEAMS_BUILD_STATUS }}
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+        with:
+          useConfigFile: true
+          configFilePath: GitVersion.yml
+
+      - name: Build and Push Docker image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGES_PAT: ${{ secrets.PACKAGES_PAT }}
+        run: |
+          export CI_REPOSITORY_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+          docker login ghcr.io --username automation@lungmuss.com --password $GITHUB_TOKEN
+          docker build . --build-arg RELEASE_TAG=$PreReleaseTag --build-arg SEMVER=${GITVERSION_SEMVER} --build-arg INF_VER=${InformationalVersion} --build-arg PROJECT_NAME=${CI_REPOSITORY_NAME} --build-arg GITHUB_TOKEN=${PACKAGES_PAT} --build-arg GITHUB_USER=orion6dev --build-arg BUILD_CONFIGURATION=Release --label org.opencontainers.image.source=https://github.com/lungmuss/${CI_REPOSITORY_NAME} --tag ghcr.io/lungmuss/$CI_REPOSITORY_NAME:$GITVERSION_SEMVER --file $CI_REPOSITORY_NAME/Dockerfile
+          docker push ghcr.io/lungmuss/$CI_REPOSITORY_NAME:$GITVERSION_SEMVER
+          docker tag ghcr.io/lungmuss/$CI_REPOSITORY_NAME:$GITVERSION_SEMVER ghcr.io/lungmuss/$CI_REPOSITORY_NAME:review
+          docker push ghcr.io/lungmuss/$CI_REPOSITORY_NAME:review

@@ -1,0 +1,14 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: cnt_configuration_store
+spec:
+  type: configuration.postgresql
+  version: v1
+  metadata:
+  - name: connectionString
+    value: "host=postgres port=5432 user=postgres password=test*12* dbname=container sslmode=disable"
+  - name: table # name of the table which holds configuration information
+    value: "dapr_configuration_store" 
+  - name: connMaxIdleTime # max timeout for connection
+    value : "15s"

@@ -1,0 +1,26 @@
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: dapr-config
+spec:
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: http://localhost:9411/api/v2/spans
+  httpPipeline:
+    handlers:
+    - name: bearer-token
+      type: middleware.http.bearer
+  metric:
+    enabled: true
+    rules:
+    - name: dapr_runtime_service_invocation_req_sent_total
+      labels:
+      - name: method
+        regex:
+          "alles/": "/"
+  logging:
+    apiLogging:
+      enabled: true
+      obfuscateURLs: false
+      omitHealthChecks: false

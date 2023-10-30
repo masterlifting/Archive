@@ -1,0 +1,22 @@
+﻿@using Microsoft.Extensions.Localization;
+
+<ErrorHandler 
+    Message="@Localizer["The action you are trying to commit is not supported."]"
+    Icon="@Icons.Material.Sharp.Warning"
+    Color="Color.Secondary">
+    @if (HostEnvironment.IsDevelopment())
+    {
+        <MudDivider Class="my-3" />
+
+        <MudText Typo="Typo.body1">
+            Message: @Message
+        </MudText>
+    }
+</ErrorHandler>
+
+@code {
+    [Parameter] public string Message { get; set; } = "Not Supported";
+    
+    [Inject] IStringLocalizer<App> Localizer { get; set; } = default!;
+    [Inject] IHostEnvironment HostEnvironment { get; set; } = default!;
+}

@@ -1,0 +1,50 @@
+﻿@inherits UserCircuitsComponentBase
+
+<PageTitle>Warehouse</PageTitle>
+
+<MudContainer Class="mt-3" MaxWidth="MaxWidth.Medium">
+    <MudGrid Class="mt-10">
+        <MudItem xs="4">
+            <MudCard Outlined="true">
+                <MudCardContent>
+                    <MudText>Inbound workflows</MudText>
+                    <MudText Typo="Typo.caption">@Localizer["Description"]</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Outlined"
+                               OnClick="@(_ => NavigationManager.NavigateTo("/warehouse/inbound"))"
+                        Color="Color.Primary">
+                        @Localizer["Go to Inbound"]
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="4">
+            <MudCard Outlined="true">
+                <MudCardContent>
+                    <MudText>Inbound PDF documents</MudText>
+                    <MudText Typo="Typo.caption">@Localizer["Description"]</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton 
+                        Variant="Variant.Outlined"
+                        OnClick="@(_ => NavigationManager.NavigateTo("/documents/pdf"))"
+                        Color="Color.Primary">
+                        @Localizer["Go to PDF documents"]
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="4">
+            <MudCard Outlined="true">
+                <MudCardContent>
+                    <MudText>Upload documents</MudText>
+                    <MudText Typo="Typo.caption">@Localizer["Description"]</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <FilesUploader />
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

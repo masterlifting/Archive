@@ -1,0 +1,16 @@
+﻿apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: bearer-token
+spec:
+  type: middleware.http.bearer
+  version: v1
+  metadata:
+    - name: audience
+      value: "account"
+    - name: issuer
+      value: "https://${keykloak}/realms/feuerfest"
+
+    # Optional values
+#    - name: jwksURL
+#      value: "https://${keykloak}/realms/feuerfest/.well-known/openid-configuration"

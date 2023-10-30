@@ -1,0 +1,43 @@
+﻿@inherits UserCircuitsComponentBase
+@using dashboard.Domains.Workflows.Models;
+
+<PageTitle>@Localizer["Workflows"]</PageTitle>
+
+<MudContainer Class="mt-3" MaxWidth="MaxWidth.Large">
+
+    <MudPaper Class="d-flex justify-space-between align-center">
+        <MudText Class="pl-2" Typo="Typo.h6" Color="Color.Primary">@Localizer["Workflows"]</MudText>
+        <MudPaper Class="d-flex">
+            <MudTabs Centered="true" ActivePanelIndex="@_activePanelIndex">
+                <MudTabPanel Text="@Localizer["For me"]" OnClick="_ => LoadUserWorkFlows()" />
+                <MudTabPanel Text="@Localizer["For my roles"]" OnClick="_ => LoadUserRolesWorkflows()" />
+            </MudTabs>
+        </MudPaper>
+    </MudPaper>
+
+    @if(_selectorIsReady)
+    {
+        <MudDataGrid 
+            T="Workflow"
+            Items="@WorkflowsSelector.Value.Models"
+            Class="mt-2"
+            Style="cursor:pointer"
+            Dense="true"
+            RowClick="MoveToWorkflowDetails"
+            Hover="true">
+        
+            <Columns>
+                <PropertyColumn Property="x => x.Metadata.OrderId" Title="OrderId   " />
+                <PropertyColumn Property="x => x.Metadata.CreatedBy" Title="CreatedBy" />
+                <PropertyColumn Property="x => x.Metadata.CreatedOn" Title="CreatedOn" />
+                <PropertyColumn Property="x => x.Metadata.Status" Title="Status" />
+            </Columns>
+        
+            <PagerContent>
+                <MudDataGridPager T="Workflow" />
+            </PagerContent>
+    
+        </MudDataGrid>
+    }
+
+</MudContainer>

@@ -1,0 +1,265 @@
+#@name Keycloak - Password login
+
+ 
+
+# Log-in with your username and password. Access- and refreshtoken are stored
+# in two global variables.
+#
+#  - access_token
+#  - refresh_token
+
+ 
+
+# This file is specific to Jetbrains HTTP Client. It may not be compatible with other IDEs / Clients.
+
+POST http://{{localhost}}:{{port}}/realms/master/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+
+
+grant_type = password &
+client_id = {{client_id}} &
+username = {{username}} &
+password = {{password}}
+
+
+
+> {%
+    client.global.set("access_token", response.body.access_token);
+    client.global.set("refresh_token", response.body.refresh_token);
+
+
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+
+    client.test("Response body contains access_token", function () {
+        client.assert(response.body.access_token, "Response body does not contain access_token");
+    });
+
+
+    client.test("Response content-type is json", function () {
+        var type = response.contentType.mimeType;
+        client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+    });
+%}
+
+
+
+### create realm
+
+ 
+
+POST http://{{localhost}}:{{port}}/admin/realms
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+
+
+{"realm":"{{realm}}","enabled":true}
+
+
+
+> {%
+
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
+
+
+### create user 
+POST http://{{localhost}}:{{port}}/admin/realms/{{realm}}/users
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+
+
+{
+    "username": "{{newUser}}",
+    "enabled": true,
+    "emailVerified": true,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "johndoe@example.com",
+    "credentials": [
+      {
+        "type": "password",
+        "value": "{{newUserPassword}}",
+        "temporary": false
+      }
+    ]
+  }
+
+
+
+> {%
+
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
+### create service user
+POST http://{{localhost}}:{{port}}/admin/realms/{{realm}}/users
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+
+
+{
+    "username": "{{serviceUser}}",
+    "enabled": true,
+    "emailVerified": true,
+    "firstName": "Service",
+    "lastName": "Account",
+    "email": "serviceaccount@example.com",
+    "credentials": [
+      {
+        "type": "password",
+        "value": "{{serviceUserPassword}}",
+        "temporary": false
+      }
+    ]
+  }
+
+
+
+> {%
+
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
+### create client web-api 
+POST http://{{localhost}}:{{port}}/admin/realms/{{realm}}/clients
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+
+
+{
+  "clientId": "web-api",
+  "name": "Web Api",
+  "enabled": true,
+  "secret": "{{webApiSecret}}",
+  "clientAuthenticatorType": "client-secret",
+  "directAccessGrantsEnabled": true
+}
+
+
+
+> {%
+
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
+### create client service-account
+POST http://{{localhost}}:{{port}}/admin/realms/{{realm}}/clients
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+
+
+{
+  "clientId": "service-account",
+  "name": "Service Account",
+  "enabled": true,
+  "secret": "{{serviceAccountSecret}}",
+  "clientAuthenticatorType": "client-secret",
+  "directAccessGrantsEnabled": true,
+  "serviceAccountsEnabled": true
+}
+
+
+
+> {%
+
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
+
+
+### get token for new user and client
+
+ 
+
+POST http://localhost:{{port}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+
+
+grant_type = password &
+client_id = web-api &
+username = {{newUser}} &
+password = {{newUserPassword}} &
+client_secret = {{webApiSecret}}
+
+
+
+> {%
+    client.global.set("access_token_user", response.body.access_token);
+    client.global.set("refresh_token_user", response.body.refresh_token);
+
+
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+
+    client.test("Response body contains access_token", function () {
+        client.assert(response.body.access_token, "Response body does not contain access_token");
+    });
+
+
+    client.test("Response content-type is json", function () {
+        var type = response.contentType.mimeType;
+        client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+    });
+%}
+
+
+### get token for service user and client
+
+ 
+
+POST http://{{localhost}}:{{port}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+
+
+grant_type = password &
+client_id = service-account &
+username = {{serviceUser}} &
+password = {{serviceUserPassword}} &
+client_secret = {{serviceAccountSecret}}
+
+
+
+> {%
+    client.global.set("access_token_user", response.body.access_token);
+    client.global.set("refresh_token_user", response.body.refresh_token);
+
+
+    client.test("Request executed successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+
+    client.test("Response body contains access_token", function () {
+        client.assert(response.body.access_token, "Response body does not contain access_token");
+    });
+
+
+    client.test("Response content-type is json", function () {
+        var type = response.contentType.mimeType;
+        client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+    });
+%}

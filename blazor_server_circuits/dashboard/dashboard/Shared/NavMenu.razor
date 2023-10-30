@@ -1,0 +1,47 @@
+﻿@using Microsoft.Extensions.Localization;
+@inject IHostEnvironment HostEnvironment
+@inject IStringLocalizer<App> Localizer
+
+<MudNavMenu Color="Color.Dark">
+    
+    <MudNavLink Icon="@Icons.Material.Outlined.Home" Href="/" Match="NavLinkMatch.Prefix">
+        @Localizer["Home"]
+    </MudNavLink>
+    
+    <AuthorizeView>
+        <Authorized>
+            <MudDivider />
+
+            <MudNavLink Icon="@Icons.Material.Outlined.WorkHistory" Href="/workflows" Match="NavLinkMatch.Prefix">
+                @Localizer["Workflows"]
+            </MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Outlined.Warehouse" Href="/warehouse" Match="NavLinkMatch.Prefix">
+                @Localizer["Warehouse"]
+            </MudNavLink>
+            
+            <MudDivider/>
+            
+            <MudNavLink Icon="@Icons.Material.Outlined.Email" Href="https://outlook.office.com" Target="_blank">
+                @Localizer["EMail"]
+            </MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Outlined.CalendarMonth" Href="https://outlook.office.com/calendar/view/month" Target="_blank">
+                @Localizer["Calendar"]
+            </MudNavLink>
+            
+            <MudDivider/>
+        </Authorized>
+    </AuthorizeView>
+    
+    @if (HostEnvironment.IsDevelopment())
+    {
+        <MudNavGroup Icon="@Icons.Material.Outlined.DeveloperBoard" Title="Services" Expanded="false">
+            <MudNavLink Icon="@Icons.Material.Outlined.Analytics" Href="http://localhost:9411/zipkin/" Target="_blank">
+                Zipkin
+            </MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Outlined.Analytics" Href="http://localhost:9090" Target="_blank">
+                Prometheus
+            </MudNavLink>
+        </MudNavGroup>
+    }
+
+</MudNavMenu>

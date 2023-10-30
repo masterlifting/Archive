@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "sNAeqM/D6l3wUXNA3itsrfmvs5k7pP2J+T6DE5A05GSdF/yMa8v/RsDIVW9aFxyZ7OROVjUidXHOXnq+ai871A==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\andre\\source\\repos\\work\\lungmuss\\refractory\\utility\\ConsoleApp1\\ConsoleApp1.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\andre\\.nuget\\packages\\octokit\\7.1.0\\octokit.7.1.0.nupkg.sha512"
+  ],
+  "logs": []
+}

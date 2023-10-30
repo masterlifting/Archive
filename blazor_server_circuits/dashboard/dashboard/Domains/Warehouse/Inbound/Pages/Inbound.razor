@@ -1,0 +1,102 @@
+﻿@inherits UserCircuitsComponentBase
+@using dashboard.Domains.Warehouse.Inbound.Models;
+
+<PageTitle>Inbound</PageTitle>
+
+<MudContainer Class="mt-3" MaxWidth="MaxWidth.Large">
+
+    <MudGrid>
+        <MudItem xs="7">
+            
+            <MudPaper>
+                <MudText Class="pl-2" Typo="Typo.h6" Color="Color.Primary">@Localizer["Started inbound workflows"]</MudText>
+            </MudPaper>
+
+            @if(_selectorIsReady)
+            {
+                <MudDataGrid T="InboundWorkflow"
+                    RowClick="MoveToDetails"
+                    Items="@InboundSelector.Value.Models"
+                    Class="mt-2"
+                    Style="cursor:pointer"
+                    Dense="true"
+                    Hover="true">
+
+                    <Columns>
+                        <PropertyColumn Property="x => x.CreatedOn" Title="CreatedOn" />
+                        <PropertyColumn Property="x => x.OrderNumber" Title="@Localizer["Order number"]" />
+                        <PropertyColumn Property="x => x.Description" Title="@Localizer["Description"]" />
+                    </Columns>
+
+                    <PagerContent>
+                        <MudDataGridPager T="InboundWorkflow" />
+                    </PagerContent>
+
+                </MudDataGrid>
+            }
+
+        </MudItem>
+        <MudItem xs="5">
+            
+            <MudPaper>
+                <MudText Class="pl-2 mb-2" Typo="Typo.h6" Color="Color.Primary">@Localizer["Create new Inbound workflow"]</MudText>
+            </MudPaper>
+            
+            @if(_createModel is not null)
+            {
+                <EditForm Model="@_createModel"
+                    OnValidSubmit="OnValidSubmit">
+                    <DataAnnotationsValidator />
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudCard>
+                                <MudCardContent>
+                                    <MudSelect
+                                        Placeholder="Click to select"
+                                        OnBlur="OnSetState" 
+                                        T="int" @bind-Value="@_createModel.CategoryId" 
+                                        Label="@Localizer["Category type"]" 
+                                        AnchorOrigin="Origin.BottomCenter">
+                                        @foreach (var category in _categories)
+                                        {
+                                            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                    <AutoComplete 
+                                        T="InboundWorkflowArticle"
+                                        Label="@Localizer["Article"]"
+                                        EditContext="@context"
+                                        StoredItem="_createModel.Article"
+                                        OnBlur="@((InboundWorkflowArticle result) => _createModel.Article = result)"
+                                        TToString="@((InboundWorkflowArticle? result) => 
+                                            result is null 
+                                                ? string.Empty 
+                                                : $"{result.Name}, SupplierId {result.SupplierId}, ArticleId {result.ArticleId}")"
+                                        HandleResult="@((InboundWorkflowArticle result) => 
+                                        {
+                                            _createModel.ArticleSupplierRowId = result.RowId;
+                                            _createModel.ArticleSupplierDescription = result.Name;
+                                        })"/>
+                                    <MudTextField OnBlur="OnSetState" Label="@Localizer["Order number"]" @bind-Value="_createModel.OrderNumber" For="@(() => _createModel.OrderNumber)" />
+                                    <MudTextField OnBlur="OnSetState" Label="@Localizer["Number of containers"]" @bind-Value="_createModel.ContainersCount" For="@(() => _createModel.ContainersCount)" />
+                                    <MudTextField OnBlur="OnSetState" Label="@Localizer["Weight"]" @bind-Value="_createModel.Weight" For="@(() => _createModel.Weight)" />
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton 
+                                        ButtonType="ButtonType.Submit" 
+                                        Variant="Variant.Filled" 
+                                        Color="Color.Primary" 
+                                        Class="ml-auto">
+                                        @Localizer["Create"]
+                                        </MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </EditForm>
+            }
+        
+        </MudItem>
+    </MudGrid>
+
+</MudContainer>

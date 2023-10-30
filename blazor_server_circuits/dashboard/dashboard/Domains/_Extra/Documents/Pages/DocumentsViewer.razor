@@ -1,0 +1,43 @@
+﻿@inherits UserCircuitsComponentBase
+@using dashboard.Domains._Extra.Documents.Models;
+@using static dashboard.Domains.Constants.Extra;
+
+<PageTitle>@Localizer["Documents"]</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Style="padding-top:2rem">
+    <MudPaper>
+        <MudText Class="pl-2" Typo="Typo.h6" Color="Color.Primary">@Localizer["Documents"]</MudText>
+    </MudPaper>
+
+    <MudDataGrid 
+        T="DashboardDocument"
+        RowClick="OnRowClick"
+        Items="@DocumentsSelector.Value.Models"
+        Class="mt-2"
+        Style="cursor:pointer"
+        Dense="true"
+        Hover="true">
+
+        <Columns>
+            <PropertyColumn Property="x => x.Id" Title="Document Id" />
+            <TemplateColumn>
+                <CellTemplate>
+                    @switch(context.Item.Type)
+                    {
+                        case SupportedDocumentTypes.Pdf:
+                            <MudIcon Color="Color.Error" Icon="@Icons.Material.Sharp.PictureAsPdf" Size="@Size.Small" />
+                            break;
+                        default:
+                            <MudIcon Color="Color.Dark" Icon="@Icons.Material.Sharp.QuestionMark" Size="@Size.Small" />
+                            break;
+                    }
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+
+        <PagerContent>
+            <MudDataGridPager T="DashboardDocument" />
+        </PagerContent>
+
+    </MudDataGrid>
+</MudContainer>

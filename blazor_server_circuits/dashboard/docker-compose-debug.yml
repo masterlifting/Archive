@@ -1,0 +1,35 @@
+# This docker-compose file is for local development only.
+
+# Dapr arguments and annotations for daprd, CLI, and Kubernetes
+# https://docs.dapr.io/reference/arguments-annotations-overview/
+
+version: '3.7'
+
+services:
+  dashboard:
+    image: "hello-world"
+
+  dashboard-dapr:
+    image: "daprio/daprd:latest"
+    command: [ "./daprd",
+               "--app-channel-address", "host.docker.internal",
+               "--app-id", "dashboard",
+               "--app-port", "5123",
+               "--components-path","/components",
+               "--config", "/config/config.yaml",
+               "--log-level", "debug",
+               "--placement-host-address", "dapr-placement:50005"
+    ]
+    volumes:
+      - "./.dapr/components/:/components"
+      - "./.dapr/config/:/config"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    network_mode: !reset "" # reset the network_mode...
+    #ports:
+      #- "3500:3500"
+      #- "50001:50001"
+    restart: on-failure
+    networks: # ... so that the sidecar can go into the normal network
+      - network

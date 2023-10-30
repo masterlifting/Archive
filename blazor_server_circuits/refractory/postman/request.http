@@ -1,0 +1,98 @@
+#@name Keycloak - Password login
+
+# Log-in with your username and password. Access- and refreshtoken are stored
+# in two global variables.
+#
+#  - access_token
+#  - refresh_token
+
+    
+POST http://{{keycloak}}/realms/feuerfest/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{webApiClientId}}&username={{newUser}}&password={{newUserPassword}}&client_secret={{webApiSecret}}
+
+> {%
+    client.global.set("access_token", response.body.access_token);
+    client.global.set("refresh_token", response.body.refresh_token);
+%}
+
+###
+
+#    
+#     Dapr Service Invocation Request:
+#    
+#     Endpoint: GET http://localhost:3500/v1.0/invoke/whoami/method/v1.0/whoami
+#    
+#     - `http://localhost:3500`: Dapr runs an HTTP server on localhost, by default on port 3500.
+#         This is where our applications can send requests to interact with Dapr's API.
+#    
+#     - `/v1.0`: This is the versioning prefix for Dapr's API. It's good practice to specify this
+#         to ensure compatibility, even if API changes in the future.
+#    
+#     - `/invoke`: This segment of the URL indicates we're making use of Dapr's Service Invocation API.
+#         The Service Invocation API allows one service to invoke methods (with retries, etc.) on another service,
+#         without needing to know the other service's exact location or the underlying mechanics of
+#         the invocation.
+#    
+#     - `/whoami`: This is the `app-id` of the target Dapr application we want to invoke. Dapr uses
+#         this ID to discover and route the request to the correct service. In this case, we're targeting
+#         a service with the app-id "whoami".
+#    
+#     - `/method`: Signifies the beginning of the method segment of the service we're trying to invoke.
+#    
+#     - `/v1.0/whoami`: This is the specific method on the `whoami` service we're looking to call.
+#         The path after `/method` is determined by the target application, and in this instance,
+#         seems to be versioned similarly to Dapr's own API.
+#    
+#     Overall, this request will reach out to the Dapr sidecar running locally, which will then
+#     use its Service Invocation mechanism to route and manage the request to the "whoami" service's
+#     specific method endpoint.
+#    
+
+GET http://localhost:3500/v1.0/invoke/whoami/method/v1.0/whoami
+
+### Create a document and save its id. Expected behavior: no error (error code must be BLB-00000),
+### reference and mime_type should be set properly.
+
+POST http://{{localhost_dapr}}/v1.0/invoke/blob/method/v1/blob
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Authorization: Bearer {{access_token}}
+
+--WebAppBoundary
+Content-Disposition: form-data; name="blobFile"; filename="data.json"
+Content-Type: application/json
+
+< ./upload-pdf/empty-template.pdf
+
+--WebAppBoundary
+Content-Disposition: form-data; name="payload";
+Content-Type: application/json
+
+{ "reference": "test_reference", "mime_type" : "test_mime_type" }
+--WebAppBoundary--
+
+
+### Update the document and save the new version id. Expected behavior: no error (error code must be BLB-00000), document version is different.
+
+PUT http://{{localhost_dapr}}/v1.0/invoke/blob/method/v1/blob/{{documentId}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Authorization: Bearer {{access_token}}
+
+--WebAppBoundary
+Content-Disposition: form-data; name="blobFile"; filename="data.json"
+Content-Type: application/json
+
+< ./keycloak.http
+
+--WebAppBoundary
+Content-Disposition: form-data; name="payload";
+Content-Type: application/json
+
+{ "reference": "test_reference_new", "mime_type" : "test_mime_type_new" }
+--WebAppBoundary--
+
+### Get the document. Expected behavior: no error (error code must be BLB-00000), document version is different.
+
+GET http://{{localhost_dapr}}/v1.0/invoke/blob/method/v1/blob/pdf/view/09b253df-06f5-4cb8-a2b5-7fb4108edda1
+Authorization: Bearer {{access_token}}

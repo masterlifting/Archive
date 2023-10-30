@@ -1,0 +1,3 @@
+keykloak_transport=http
+keykloak=localhost:8080
+LUNGMUSS_PATH=C:/customer/lungmuss
