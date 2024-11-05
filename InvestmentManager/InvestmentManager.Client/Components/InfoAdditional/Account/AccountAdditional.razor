@@ -1,0 +1,68 @@
+﻿@inject APIService<AccountAdditionalModel> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+        @if (model is not null)
+        {
+            foreach (var detail in model.Details)
+            {
+                <KeyValueCols KeySize="6" Key="Free sum" Value="@($"{detail.FreeSum.ToString("#,#0.##")} {detail.Currency}")" />
+            }
+            foreach (var detail in model.Details)
+            {
+                <KeyValueCols KeySize="6" Key="Invested sum" Value="@($"{detail.InvestedSum.ToString("#,#0.##")} {detail.Currency}")" />
+            }
+            foreach (var detail in model.Details)
+            {
+                <KeyValueCols KeySize="6" Key="Dividend sum" Value="@($"{detail.DividendSum.Value.ToString("#,#0.##")} {detail.Currency}")" />
+            }
+        }
+        else
+        {
+            <span>@info</span>
+        }
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [CascadingParameter] Task<AuthenticationState> AuthenticationState { get; set; }
+
+    AccountAdditionalModel model;
+
+    string info = DefaultString.loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationStateTask).User;
+
+        string CustomUrlBuilder(long accountId) => AccountAPI.GetUriAddittionalById(accountId);
+        AccountAdditionalModel CustomResultBuilder(List<AccountAdditionalModel> additionals)
+        {
+            var result = new AccountAdditionalModel();
+            var details = new List<AccountAdditionalDetail>();
+
+            foreach (var additional in additionals)
+                details.AddRange(additional.Details);
+
+            if (details.Any())
+                result.Details = details.GroupBy(x => x.Currency).Select(x => new AccountAdditionalDetail
+                {
+                    Currency = x.Key,
+                    FreeSum = x.Sum(y => y.FreeSum),
+                    InvestedSum = x.Sum(y => y.InvestedSum),
+                    DividendSum = x.Where(x => x.DividendSum.HasValue).Any() ? x.Sum(x => x.DividendSum.Value) : 0
+                }).ToList();
+
+            return result;
+        }
+
+        var queryResult = await apiService.GetResultAsync(user, CustomUrlBuilder, CustomResultBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

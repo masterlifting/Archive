@@ -1,0 +1,40 @@
+﻿@inject APIService<SummaryPrice> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+
+        @if (model is not null)
+        {
+            <KeyValueCols Key="Date update" Value="@model.DateUpdate.ToString()" />
+            <KeyValueCols Key="Date price" Value="@model.DatePrice.ToString()" />
+            <KeyValueCols Key="Cost" Value="@model.Cost.ToString("#,#0.####")" />
+
+            <div class="col">
+                <PriceF CompanyId="CompanyId" />
+            </div>
+        }
+        else
+        {
+            <span>@info</span>
+        }
+
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [Parameter] public long CompanyId { get; set; }
+
+    string info = DefaultString.loading;
+    SummaryPrice model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string CustomUriBuilder() => PriceAPI.GetUriSummaryByCompanyId(CompanyId);
+        var queryResult = await apiService.GetResultAsync(CustomUriBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

@@ -1,0 +1,33 @@
+﻿@inject APIService<SummaryBuyRecommendation> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="@((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+        @if (model is not null)
+        {
+            <KeyValueCols KeySize="6" Key="Date Update" Value="@model.DateUpdate.ToString()" />
+            <KeyValueCols KeySize="6" Key="Buy if the price is less" Value="@model.BuyPrice.ToString("#,#0.####")" />
+        }
+        else
+        {
+            <span>@info</span>
+        }
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [Parameter] public long CompanyId { get; set; }
+
+    string info = DefaultString.loading;
+    SummaryBuyRecommendation model;
+
+    protected async override Task OnInitializedAsync()
+    {
+        string CustomUriBuilder() => BuyRecommendationAPI.GetUriSummaryByCompanyId(CompanyId);
+        var queryResult = await apiService.GetResultAsync(CustomUriBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

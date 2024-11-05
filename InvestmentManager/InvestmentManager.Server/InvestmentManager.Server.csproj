@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+	  <UserSecretsId>4a7280ff-a79f-4925-8038-ae131c726aae</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Controllers\CoefficientsController.cs~RF23b730.TMP" />
+    <None Remove="Controllers\DividendsController.cs~RF537ad9.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="5.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\InvestmentManager.BrokerService\InvestmentManager.BrokerService.csproj" />
+    <ProjectReference Include="..\InvestmentManager.Calculator\InvestmentManager.Calculator.csproj" />
+    <ProjectReference Include="..\InvestmentManager.ClientModels\InvestmentManager.ClientModels.csproj" />
+    <ProjectReference Include="..\InvestmentManager.Client\InvestmentManager.Client.csproj" />
+    <ProjectReference Include="..\InvestmentManager.Mapper\InvestmentManager.Mapper.csproj" />
+    <ProjectReference Include="..\InvestmentManager.Models\InvestmentManager.Models.csproj" />
+    <ProjectReference Include="..\InvestmentManager.ReportFinder\InvestmentManager.ReportFinder.csproj" />
+    <ProjectReference Include="..\InvestmentManager.Repository\InvestmentManager.Repository.csproj" />
+    <ProjectReference Include="..\InvestmentManager.Services\InvestmentManager.Services.csproj" />
+  </ItemGroup>
+
+
+</Project>

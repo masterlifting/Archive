@@ -1,0 +1,60 @@
+﻿@using System.Text.Json
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Security.Claims
+@using System.Globalization
+@using System.ComponentModel.DataAnnotations
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using Microsoft.JSInterop
+
+@using Blazored.LocalStorage
+
+@using InvestmentManager.Client
+@using InvestmentManager.Client.Pages
+@using InvestmentManager.Client.Shared
+
+@using InvestmentManager.Services.Interfaces
+
+@using InvestmentManager.Client.Services.HttpService
+@using InvestmentManager.Client.Services.NotificationService
+@using InvestmentManager.Client.Services.AuthenticationConfiguration
+@using InvestmentManager.Client.Configurations
+@using static InvestmentManager.Client.Configurations.EnumConfig
+
+
+@using static InvestmentManager.Models.Enums
+@using InvestmentManager.Models
+@using InvestmentManager.Models.EntityModels
+@using InvestmentManager.Models.SummaryModels
+@using InvestmentManager.Models.Additional
+@using InvestmentManager.Models.Security
+@using InvestmentManager.Models.Services
+
+@using InvestmentManager.Client.Components.Authentication
+
+@using InvestmentManager.Client.Components.Common.Rows
+@using InvestmentManager.Client.Components.Common.Cols
+@using InvestmentManager.Client.Components.Common.Buttons
+@using InvestmentManager.Client.Components.Common.Icons
+
+@using InvestmentManager.Client.Components.BrokerReports
+@using InvestmentManager.Client.Components.BrokerReports.Errors
+@using InvestmentManager.Client.Components.BrokerReports.Successed
+
+@using InvestmentManager.Client.Components.Frames
+@using InvestmentManager.Client.Components.Forms
+@using InvestmentManager.Client.Components.Templates
+
+@using InvestmentManager.Client.Components.InfoFull.Account
+@using InvestmentManager.Client.Components.InfoFull.Company
+@using InvestmentManager.Client.Components.InfoShort.Account
+@using InvestmentManager.Client.Components.InfoShort.Company
+@using InvestmentManager.Client.Components.InfoAdditional.Account
+@using InvestmentManager.Client.Components.InfoAdditional.Company

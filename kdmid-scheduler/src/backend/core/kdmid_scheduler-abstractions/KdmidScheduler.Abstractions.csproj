@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Data.Tables" Version="12.8.2" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
+    <PackageReference Include="MongoDB.Bson" Version="2.23.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\submodules\shared-background\src\background-abstractions\Net.Shared.Background.Abstractions.csproj" />
+    <ProjectReference Include="..\submodules\shared-bots\src\bots-abstractions\Net.Shared.Bots.Abstractions.csproj" />
+    <ProjectReference Include="..\submodules\shared-persistence\src\persistence-abstractions\Net.Shared.Persistence.Abstractions.csproj" />
+    <ProjectReference Include="..\submodules\shared-queues\src\queues-abstractions\Net.Shared.Queues.Abstractions.csproj" />
+    <ProjectReference Include="..\submodules\shared-web\src\web-abstractions\Net.Shared.Web.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

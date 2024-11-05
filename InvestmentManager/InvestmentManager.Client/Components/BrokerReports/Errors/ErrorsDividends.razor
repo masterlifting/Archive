@@ -1,0 +1,64 @@
+﻿@inject API api
+@inject CustomNotification notice
+@using System.Text.RegularExpressions
+
+<BaseError Title="@Title" ErrorValue="@ErrorValue" IsDone="isDone">
+    <ChildContent>
+        @if (model is not null)
+        {
+            <EditForm class="col-12" Model="model" OnValidSubmit="SendData">
+                <DataAnnotationsValidator />
+
+                <ValidationMessage For="(() => model.CompanyId)" />
+                <InputSelect class="mb-2" @bind-Value="model.CompanyId">
+                    @foreach (var i in companies)
+                        {
+                        <option value="@i.Id">@i.Name</option>
+                        }
+                </InputSelect>
+
+                <div class="row mb-1 pl-2">
+                    <div class="col text-info">Identifier for dividend:</div>
+                </div>
+
+                <ValidationMessage For="(() => model.Name)" />
+                <InputText class="mb-2" @bind-Value="model.Name" />
+
+                <ButtonSubmit Title="Fix" Color="ColorCustom.iwarning" />
+            </EditForm>
+        }
+    </ChildContent>
+</BaseError>
+
+@code {
+    [Parameter] public string ErrorValue { get; set; }
+    [Parameter] public string Title { get; set; }
+
+    bool isDone = false;
+    IsinModel model;
+    List<ShortView> companies;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        companies = await api.Company.Value.GetShortCompaniesAsync();
+        if (companies != default)
+        {
+            model = new IsinModel
+            {
+                Name = Regex.Match(ErrorValue.Split('\'')[1], @", (\w*)$").Groups[1].Value,
+                CompanyId = companies.FirstOrDefault().Id
+            };
+        }
+    }
+    async Task SendData()
+    {
+        var result = await api.Isin.Value.AddNewAsync(model);
+        if (result.IsSuccess)
+        {
+            isDone = true;
+            await notice.AlertSuccesAsync(result.Info);
+        }
+        else
+            notice.ToastDanger("Isin error.", result.Info);
+    }
+}

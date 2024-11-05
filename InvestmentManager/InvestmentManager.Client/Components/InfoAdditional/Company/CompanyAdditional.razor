@@ -1,0 +1,35 @@
+﻿@inject APIService<CompanyAdditionalModel> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="@((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+        @if (model is not null)
+        {
+            <KeyValueCols Key="Currency" Value="@model.Currency" />
+            <KeyValueCols Key="Sector" Value="@model.SectorName" />
+            <KeyValueCols Key="Industry" Value="@model.IndustryName" />
+        }
+        else
+        {
+            <span>@info</span>
+        }
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [Parameter] public long CompanyId { get; set; }
+
+    string info = DefaultString.loading;
+    CompanyAdditionalModel model;
+
+    protected async override Task OnInitializedAsync()
+    {
+        string CustomUrlBuilder() => CompanyAPI.GetUriAddittionalByCompanyId(CompanyId);
+        var queryResult = await apiService.GetResultAsync(CustomUrlBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}
+

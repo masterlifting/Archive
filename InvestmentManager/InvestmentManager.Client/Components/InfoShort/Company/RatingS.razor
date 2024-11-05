@@ -1,0 +1,40 @@
+﻿@inject APIService<SummaryRating> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+
+        @if (model is not null)
+        {
+            <KeyValueCols Key="Date update" Value="@model.DateUpdate.ToString()" />
+            <KeyValueCols Key="Place" Value="@($"{model.PlaceCurrent} of {model.PlaceTotal}")" />
+            <KeyValueCols Key="Value" Value="@model.ValueTotal.ToString("f2")" />
+
+            <div class="col">
+                <RatingF CompanyId="CompanyId" />
+            </div>
+        }
+        else
+        {
+            <span>@info</span>
+        }
+
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [Parameter] public long CompanyId { get; set; }
+
+    string info = DefaultString.loading;
+    SummaryRating model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string CustomUriBuilder() => RatingAPI.GetUriSummaryByCompanyId(CompanyId);
+        var queryResult = await apiService.GetResultAsync(CustomUriBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

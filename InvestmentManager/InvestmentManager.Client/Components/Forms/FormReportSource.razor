@@ -1,0 +1,69 @@
+﻿@inject API api
+@inject CustomNotification notice
+
+<RowTitleSub Text="Roport source" />
+@if (editContext is not null)
+{
+    <EditForm EditContext="editContext">
+        <DataAnnotationsValidator />
+        <div class="row mt-1 align-items-center">
+            <div class="col">
+                <ValidationMessage For="(() => reportSource.Key)" />
+                <InputText placeholder="Enter report source key (required)" @bind-Value="reportSource.Key" />
+                <ValidationMessage For="(() => reportSource.Value)" />
+                <InputText placeholder="Enter report source value (required)" @bind-Value="reportSource.Value" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <ButtonAction Color="ColorCustom.isuccess" ClickAction="SaveClose" Title="Save" />
+            </div>
+        </div>
+    </EditForm>
+}
+else
+{
+    <span>@DefaultString.loading</span>
+}
+
+@code {
+    [Parameter] public long CompanyId { get; set; }
+    [Parameter] public EventCallback<int> Step { get; set; }
+
+    EditContext editContext;
+    ReportSourceModel reportSource;
+    bool isEditeble = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        reportSource = await api.ReportSource.Value.GetReportSourceByCompanyIdAsync(CompanyId);
+
+        if (reportSource == default)
+        {
+            isEditeble = false;
+            reportSource = new ReportSourceModel { CompanyId = CompanyId };
+        }
+
+        editContext = new EditContext(reportSource);
+
+        await base.OnInitializedAsync();
+    }
+
+    async Task SaveClose()
+    {
+        if (editContext.Validate())
+        {
+            var result = isEditeble
+                ? await api.ReportSource.Value.EditAsync(reportSource.Id, reportSource)
+                : await api.ReportSource.Value.AddNewAsync(reportSource);
+
+            if (result.IsSuccess)
+            {
+                await notice.AlertSuccesAsync(result.Info);
+                await Step.InvokeAsync(200);
+            }
+            else
+                notice.ToastDanger("Errors", result.Info);
+        }
+    }
+}

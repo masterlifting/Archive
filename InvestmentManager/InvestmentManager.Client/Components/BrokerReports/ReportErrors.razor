@@ -1,0 +1,39 @@
+﻿@foreach (var error in errors.OrderBy(x => x.ErrorType))
+{
+    switch (error.ErrorType)
+    {
+        case BrokerReportErrorTypes.AccountError:
+            <ErrorsAccount Title="Account error" ErrorValue="@error.ErrorValue" />
+            break;
+        case BrokerReportErrorTypes.AccountTransactionError:
+            <ErrorsAccountTransactions Title="Account transaction error" ErrorValue="@error.ErrorValue" />
+            break;
+        case BrokerReportErrorTypes.StockTransactionError:
+            <ErrorsStockTransactions Title="Stock transaction error" ErrorValue="@error.ErrorValue" />
+            break;
+        case BrokerReportErrorTypes.DividendError:
+            <ErrorsDividends Title="Dividend error" ErrorValue="@error.ErrorValue" />
+            break;
+        case BrokerReportErrorTypes.ComissionError:
+            <ErrorsComissions Title="Comission error" ErrorValue="@error.ErrorValue" />
+            break;
+        case BrokerReportErrorTypes.ExchangeRateError:
+            <ErrorsExchangeRates Title="Exchange rate error" ErrorValue="@error.ErrorValue" />
+            break;
+        case BrokerReportErrorTypes.UndefinedError:
+            <ErrorsDefault Title="Undefiend error" ErrorValue="@error.ErrorValue" />
+            break;
+    }
+}
+
+
+@code {
+    [Parameter] public List<BrokerReportErrorModel> Errors { get; set; }
+    List<BrokerReportErrorModel> errors;
+
+    protected override void OnParametersSet()
+    {
+        errors = Errors;
+        base.OnParametersSet();
+    }
+}

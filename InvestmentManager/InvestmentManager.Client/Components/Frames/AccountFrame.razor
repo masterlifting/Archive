@@ -1,0 +1,171 @@
+﻿@inject IJSRuntime jsscript
+@inject ILocalStorageService localStorage
+@inject IAuthenticationService authenticationService
+@inject API api
+@inject CustomNotification notice
+@inject NavigationManager navigationManager
+
+<FrameTemplate Theme="ColorCustom.isuccess" Name="@sumResult.ToString("#,0.##",new NumberFormatInfo() { NumberGroupSeparator = " " })" TitleColor="ColorBootstrap.light">
+    <AdditionalBlock>
+        <div class="col-12">
+            @foreach (var account in accountCollection)
+            {
+                <div class="row align-items-center pt-1">
+                    <div class="col-2 col-md-1">
+                        <SelectorComponent IsSelected="account.Value" Key="account.Key" SelectorAction="ToggleSelector" />
+                    </div>
+                    <div class="col-10 col-md-11 small">@account.Key.Name</div>
+                </div>
+            }
+        </div>
+    </AdditionalBlock>
+    <InfoBlock>
+        <MultiRow Name="@additional" IconName="info" Action="(() => isAdditional = !isAdditional)" Description="Basic information about the summarized data on brokerage accounts: 1. Free balance of money. 2. The amount of net investment. 3. The sum of all received dividends." />
+        <MultiRow Name="@transactions" IconName="yen" Action="(() => isTransactions = !isTransactions)" Description="Information about all transactions on brokerage accounts. Some general information" />
+        <MultiRow Name="@comissions" IconName="fire" Action="(() => isComissions = !isComissions)" Description="Information about all commissions on brokerage accounts. The sum of all commissions" />
+        <MultiRow Name="@exchangeRates" IconName="loop" Action="(() => isExchangeRates = !isExchangeRates)" Description="Information on all operations with currency exchange on brokerage accounts" />
+        <MultiRow Name="Download BCS reports (xls)" IconName="data-transfer-download" Action="@(() => ClickInputFileButtonAsync("inputButton"))" Description="You can enter data into this system about your accounts, transactions on accounts, operations with shares, received dividends or commissions only by downloading daily or monthly reports in excel format from the BCS broker. Based on this data, recommendations and all relevant information about the status of the portfolio will be calculated. No more than 10 files per upload" />
+    </InfoBlock>
+    <ActionBlock>
+        @if (isAdditional)
+        {
+            <AccountAdditional InfoName="@additional" UpdateVisible="((bool isVisible) => isAdditional = isVisible)" />
+        }
+        @if (isTransactions)
+        {
+            <AccountTransactionS InfoName="@transactions" UpdateVisible="((bool isVisible) => isTransactions = isVisible)" />
+        }
+        @if (isComissions)
+        {
+            <ComissionS InfoName="@comissions" UpdateVisible="((bool isVisible) => isComissions = isVisible)" />
+        }
+        @if (isExchangeRates)
+        {
+            <ExchangeRateS InfoName="@exchangeRates" UpdateVisible="((bool isVisible) => isExchangeRates = isVisible)" />
+        }
+    </ActionBlock>
+</FrameTemplate>
+
+<InputFile multiple OnChange="HandleSelectionAsync" id="inputButton" style="display:none" />
+
+@code {
+    bool isTransactions;
+    string transactions = "Transactions";
+    bool isComissions;
+    string comissions = "Comissions";
+    bool isExchangeRates;
+    string exchangeRates = "Exchange Rates";
+    bool isAdditional;
+    string additional = "Additional information";
+
+
+    [CascadingParameter] Task<AuthenticationState> AuthenticationState { get; set; }
+
+    decimal sumResult = 0;
+
+    Dictionary<AccountModel, bool> accountCollection = new Dictionary<AccountModel, bool>();
+    Dictionary<long, decimal> sumAccounts = new Dictionary<long, decimal>();
+    ClaimsPrincipal user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await AuthenticationState).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            try
+            {
+                var accounts = await api.Account.Value.GetAccountsAsync();
+                if (accounts != default)
+                {
+                    foreach (var account in accounts)
+                    {
+                        decimal accountSum = await api.Account.Value.GetAccountSumAsync(account.Id);
+                        sumAccounts.Add(account.Id, accountSum);
+                        accountCollection.Add(account, true);
+                    }
+                }
+            }
+            catch
+            {
+                await authenticationService.LogoutAsync();
+                navigationManager.NavigateTo("login");
+                await notice.AlertInfoAsync("Relogin please", 2000);
+            }
+        }
+
+        if (accountCollection.Any())
+        {
+            sumResult = sumAccounts.Values.Sum();
+            await localStorage.SetItemAsync<long[]>($"{user.Identity.Name}_{DefaultString.Id.accountId}", accountCollection.Select(x => x.Key.Id).ToArray());
+        }
+    }
+    public async Task ToggleSelector((bool isSelected, object Key) selector)
+    {
+        var account = selector.Key as AccountModel;
+        accountCollection[account] = selector.isSelected;
+
+        if (!accountCollection[account])
+            sumResult -= sumAccounts[account.Id];
+        else
+            sumResult += await api.Account.Value.GetAccountSumAsync(account.Id);
+
+        await localStorage.SetItemAsync<long[]>($"{user.Identity.Name}_{DefaultString.Id.accountId}", accountCollection.Where(x => x.Value == true).Select(x => x.Key.Id).ToArray());
+    }
+    async Task ClickInputFileButtonAsync(string inputFileId)
+    {
+        if (!user.Identity.IsAuthenticated)
+            await notice.AlertAccessAsync();
+        else
+            await jsscript.InvokeVoidAsync("uploadBrokerReports", inputFileId);
+    }
+    async Task HandleSelectionAsync(InputFileChangeEventArgs args)
+    {
+        string fileType = "application/vnd.ms-excel";
+        long maxFileSize = 512000;
+
+        if (args.FileCount > 10)
+        {
+            await notice.AlertInfoAsync("File count must be < 11");
+            return;
+        }
+
+        notice.LoadStart();
+
+        var content = new MultipartFormDataContent();
+
+        foreach (var file in args.GetMultipleFiles())
+        {
+            if (!file.ContentType.Equals(fileType))
+            {
+                await notice.AlertFailedAsync("File type is only excel!");
+                continue;
+            }
+
+            if (file.Size > maxFileSize)
+            {
+                await notice.AlertFailedAsync("File size is very big!");
+                continue;
+            }
+
+            byte[] buffer = new byte[file.Size];
+            await file.OpenReadStream(maxFileSize).ReadAsync(buffer);
+            content.Add(new ByteArrayContent(buffer), file.Name, file.Name);
+        }
+
+        var model = await api.Service.Value.ParseBcsReportsAsync(content);
+
+        content.Dispose();
+
+        if (model is not null)
+        {
+            await localStorage.SetItemAsync<BrokerReportModel>($"{user.Identity.Name}_{DefaultString.Id.brokerReport}", model);
+            navigationManager.NavigateTo("brokerreports");
+        }
+        else
+        {
+            notice.LoadStop();
+            await notice.AlertFailedAsync();
+        }
+    }
+}

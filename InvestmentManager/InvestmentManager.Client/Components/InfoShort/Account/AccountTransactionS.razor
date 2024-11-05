@@ -1,0 +1,66 @@
+﻿@inject APIService<SummaryAccountTransaction> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+        @if (model is not null)
+        {
+            foreach (var detail in model.Details)
+            {
+                <KeyValueCols KeySize="6" Key="Added sum" Value="@($"{detail.AddedSum.ToString("#,#0.##")} {detail.Currency}")" />
+            }
+            foreach (var detail in model.Details)
+            {
+                <KeyValueCols KeySize="6" Key="Withdrawn sum" Value="@($"{detail.WithdrawnSum.ToString("#,#0.##")} {detail.Currency}")" />
+            }
+
+            <div class="col">
+                <AccountTransactionF />
+            </div>
+        }
+        else
+        {
+            <span>@info</span>
+        }
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [CascadingParameter] Task<AuthenticationState> AuthenticationState { get; set; }
+
+    SummaryAccountTransaction model;
+
+    string info = DefaultString.loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationStateTask).User;
+        string CustomUrlBuilder(long accountId) => AccountAPI.GetUriSummaryById(accountId);
+        SummaryAccountTransaction CustomResultBuilder(List<SummaryAccountTransaction> summaries)
+        {
+            var result = new SummaryAccountTransaction();
+            var details = new List<SummaryAccountTransactionDetail>();
+
+            foreach (var summary in summaries)
+                details.AddRange(summary.Details);
+
+            if (details.Any())
+                result.Details = details.GroupBy(x => x.Currency).Select(x => new SummaryAccountTransactionDetail
+                {
+                    Currency = x.Key,
+                    AddedSum = x.Sum(y => y.AddedSum),
+                    WithdrawnSum = x.Sum(y => y.WithdrawnSum)
+                }).ToList();
+
+            return result;
+        }
+
+        var queryResult = await apiService.GetResultAsync(user, CustomUrlBuilder, CustomResultBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

@@ -1,0 +1,38 @@
+﻿@inject APIService<RatingModel> apiService
+<DetailTemplate Name="Rating detail" DetailTemplateAction="ShowInfo">
+    <ChildContent>
+        @if (model is not null)
+        {
+            <div class="row">
+                <KeyValueCols KeySize="9" Key="Price comparision" Value="@(model.PriceComparisonValue.HasValue ? model.PriceComparisonValue.Value.ToString("f2") : " - ")" />
+                <KeyValueCols KeySize="9" Key="Report comparision" Value="@(model.ReportComparisonValue.HasValue ? model.ReportComparisonValue.Value.ToString("f2") : " - ")" />
+                <KeyValueCols KeySize="9" Key="Coefficient comparision" Value="@(model.CoefficientComparisonValue.HasValue ? model.CoefficientComparisonValue.Value.ToString("f2") : " - ")" />
+                <KeyValueCols KeySize="9" Key="Coefficient avg comparision" Value="@(model.CoefficientAverageValue.HasValue ? model.CoefficientAverageValue.Value.ToString("f2") : " - ")" />
+                <KeyValueCols KeySize="9" Key="Cash flow comparision" Value="@(model.CashFlowPositiveBalanceValue.HasValue ? model.CashFlowPositiveBalanceValue.Value.ToString("f2") : " - ")" />
+            </div>
+        }
+        else
+        {
+            <span>@info</span>
+        }
+    </ChildContent>
+</DetailTemplate>
+
+@code {
+    [Parameter] public long CompanyId { get; set; }
+    string info = DefaultString.loading;
+
+    RatingModel model;
+
+    async Task ShowInfo(bool isDetails)
+    {
+        if (isDetails == true)
+        {
+            string CustomUriBuilder() => RatingAPI.GetUriByCompanyId(CompanyId);
+            var queryResult = await apiService.GetResultAsync(CustomUriBuilder);
+
+            model = queryResult.ResultContent;
+            info = queryResult.ResultInfo;
+        }
+    }
+}

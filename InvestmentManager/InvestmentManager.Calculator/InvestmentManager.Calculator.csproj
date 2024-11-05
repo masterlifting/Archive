@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\InvestmentManager.Entities\InvestmentManager.Entities.csproj" />
+    <ProjectReference Include="..\InvestmentManager.Models\InvestmentManager.Models.csproj" />
+    <ProjectReference Include="..\InvestmentManager.Repository\InvestmentManager.Repository.csproj" />
+  </ItemGroup>
+
+</Project>

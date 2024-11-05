@@ -1,0 +1,60 @@
+﻿@inject APIService<SummaryComission> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+        @if (model is not null)
+        {
+            <KeyValueCols KeySize="6" Key="Date first comission" Value="@model.DateFirstComission.ToShortDateString()" />
+            <KeyValueCols KeySize="6" Key="Date last comission" Value="@model.DateLastComission.ToShortDateString()" />
+            @foreach (var comission in model.Details)
+            {
+                <KeyValueCols KeySize="6" Key="Sum all time" Value="@($"{comission.Amount.ToString("#,#0.##")} {comission.Currency}")" />
+            }
+
+            <div class="col">
+                <ComissionF />
+            </div>
+        }
+        else
+        {
+            <span>@info</span>
+        }
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [CascadingParameter] Task<AuthenticationState> AuthenticationState { get; set; }
+
+    SummaryComission model;
+    string info = DefaultString.loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationStateTask).User;
+        string CustomUrlBuilder(long accountId) => ComissionAPI.GetUriSummaryByAccountId(accountId);
+        SummaryComission CustomResultBuilder(List<SummaryComission> models)
+        {
+            var details = new List<SummaryComissionDetail>();
+
+            if (models.Where(x => x.Details != null).Any())
+                foreach (var item in models.Where(x => x.Details != null).Select(x => x.Details))
+                    details.AddRange(item);
+
+            return new SummaryComission
+            {
+                DateFirstComission = models.OrderBy(x => x.DateFirstComission).First().DateFirstComission,
+                DateLastComission = models.OrderBy(x => x.DateLastComission).Last().DateLastComission,
+                Details = details.GroupBy(x => x.Currency).Select(x => new SummaryComissionDetail { Currency = x.Key, Amount = x.Sum(y => y.Amount) }).ToList()
+            };
+        }
+
+        var queryResult = await apiService.GetResultAsync(user, CustomUrlBuilder, CustomResultBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

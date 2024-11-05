@@ -1,0 +1,54 @@
+﻿@inject APIService<SummaryDividend> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+        @if (model is not null)
+        {
+            <KeyValueCols Key="Last dividend" Value="@model.DateLastDividend.ToShortDateString()" />
+            <KeyValueCols Key="Ammount" Value="@model.LastAmount.ToString("#,#0.###")" />
+            <KeyValueCols Key="Total" Value="@model.TotalSum.ToString("#,#0.##")" />
+
+            <div class="col">
+                <DividendF CompanyId="CompanyId" />
+            </div>
+        }
+        else
+        {
+            <span>@info</span>
+        }
+    </ChildContent>
+</InfoTemplate>
+
+@code
+{
+    [CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [Parameter] public long CompanyId { get; set; }
+
+    string info = DefaultString.loading;
+    SummaryDividend model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationStateTask).User;
+
+        string CustomUrlBuilder(long accountId) => DividendAPI.GetUriSummaryByAccountIdByCompanyId(accountId, CompanyId);
+        SummaryDividend CustomResultBuilder(List<SummaryDividend> models)
+        {
+            var targetData = models.OrderBy(x => x.DateLastDividend).Last();
+            return new SummaryDividend
+            {
+                DateLastDividend = targetData.DateLastDividend,
+                LastAmount = targetData.LastAmount,
+                TotalSum = models.Sum(x => x.TotalSum)
+            };
+        }
+
+        var queryResult = await apiService.GetResultAsync(user, CustomUrlBuilder, CustomResultBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

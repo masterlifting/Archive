@@ -1,0 +1,14 @@
+﻿<div class="row ml-1">
+    <div class="col">
+        <AuthorizeView>
+            <Authorized>
+                <NavLink class="text-secondary" href="logout">bye</NavLink>&ensp;
+                <span class="text-light">@context.User.Identity.Name.Split('@')[0]</span>
+            </Authorized>
+            <NotAuthorized>
+                <NavLink class="font-weight-bold text-warning" href="login">welcome</NavLink>&ensp;
+                <NavLink href="register">register</NavLink>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>

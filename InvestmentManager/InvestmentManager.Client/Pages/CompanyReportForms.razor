@@ -1,0 +1,139 @@
+﻿@page "/companyreportforms"
+@inject API api
+@inject CustomNotification notice
+@attribute [Authorize(Roles = "pestunov")]
+
+@if (checkingreports != null)
+{
+    foreach (var result in checkingreports.Take(5).GroupBy(x => x.CompanyId).Join(companies, x => x.Key, y => y.Id, (x, y) => new { Reports = x, CompanyName = y.Name }))
+    {
+        <FrameTemplate Name="@result.CompanyName" TitleColor="ColorBootstrap.warning">
+            <InfoBlock>
+                @foreach (ReportModel report in result.Reports)
+                {
+                    <EditForm Model="report" OnValidSubmit="(() => SaveReport(report))">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="row ">
+                            <span class="col-6">Date</span>
+                            <div class="col-6">
+                                <InputDate @bind-Value="report.DateReport" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Stock volume</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The volume of shares must be a number" @bind-Value="report.StockVolume" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Dividends</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The dividents must be a number" @bind-Value="report.Dividend" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Revenue</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The revenue must be a number" @bind-Value="report.Revenue" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Gross profit</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The gross profit must be a number" @bind-Value="report.GrossProfit" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Net profit</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The net profit must be a number" @bind-Value="report.NetProfit" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Cash folw</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The cash flow must be a number" @bind-Value="report.CashFlow" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Assets</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The assets must be a number" @bind-Value="report.Assets" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Share capital</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The share capital must be a number" @bind-Value="report.ShareCapital" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Turnover</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The turnover must be a number" @bind-Value="report.Turnover" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Long term debt</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The long term debt must be a number" @bind-Value="report.LongTermDebt" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <span class="col-6">Obligations</span>
+                            <div class="col-6">
+                                <InputNumber ParsingErrorMessage="The obligations must be a number" @bind-Value="report.Obligation" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <ButtonAction Title="Delete" Color="ColorCustom.idanger" ClickAction="(() => DeleteReport(report))" />
+                            </div>
+                            <div class="col-6">
+                                <ButtonSubmit Title="Save" Color="ColorCustom.isuccess" />
+                            </div>
+                        </div>
+                    </EditForm>
+                    <div class="dropdown-divider"></div>
+                }
+            </InfoBlock>
+        </FrameTemplate>
+    }
+}
+
+@code {
+    List<ReportModel> checkingreports;
+    List<ShortView> companies = new List<ShortView>();
+    protected override async Task OnInitializedAsync()
+    {
+        companies = await api.Company.Value.GetShortCompaniesAsync();
+        checkingreports = await api.Report.Value.GetUncheckedReportsAsync();
+    }
+
+    async Task DeleteReport(ReportModel report)
+    {
+        var result = await api.Report.Value.DeleteAsync(report.Id);
+
+        if (result.IsSuccess)
+        {
+            checkingreports.Remove(report);
+            await notice.AlertSuccesAsync(result.Info);
+        }
+        else
+            await notice.AlertFailedAsync(result.Info);
+    }
+    async Task SaveReport(ReportModel report)
+    {
+        report.IsChecked = true;
+        var result = await api.Report.Value.EditAsync(report.Id, report);
+
+        if (result.IsSuccess)
+        {
+            checkingreports.Remove(report);
+            await notice.AlertSuccesAsync(result.Info);
+        }
+        else
+            await notice.AlertFailedAsync(result.Info);
+    }
+}

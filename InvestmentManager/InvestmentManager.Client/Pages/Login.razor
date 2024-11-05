@@ -1,0 +1,49 @@
+﻿@page "/login"
+@inject InvestmentManager.Client.Services.AuthenticationConfiguration.IAuthenticationService authenticationService
+@inject NavigationManager navigation
+
+<div class="row" style="margin-top:30vh">
+    <EditForm class="offset-md-4 col-md-4 col isecodary iframe" Model="loginModel" OnValidSubmit="HandleLogin">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        @if (withErrors)
+        {
+            <div class="row validation-message">
+                <div class="col">@error</div>
+            </div>
+        }
+        <div class="row">
+            <div class="col">
+                <InputText type="email" placeholder="email" @bind-Value="loginModel.Email" />
+            </div>
+        </div>
+        <div class="row my-2">
+            <div class="col">
+                <InputText type="password" placeholder="password" @bind-Value="loginModel.Password" />
+            </div>
+        </div>
+
+        <ButtonSubmit Title="To come in" Color="ColorCustom.isuccess" />
+    </EditForm>
+</div>
+
+@code {
+    LoginModel loginModel = new LoginModel();
+    bool withErrors;
+    string error = "";
+
+    async Task HandleLogin()
+    {
+        withErrors = false;
+
+        var result = await authenticationService.LoginAsync(loginModel);
+
+        if (result.IsSuccess)
+            navigation.NavigateTo("/");
+        else
+        {
+            error = result.Info;
+            withErrors = true;
+        }
+    }
+}

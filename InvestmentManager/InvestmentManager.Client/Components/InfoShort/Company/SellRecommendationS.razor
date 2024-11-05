@@ -1,0 +1,39 @@
+﻿@inject APIService<SummarySellRecommendation> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+        @if (model is not null)
+        {
+            <KeyValueCols Key="Date Update" Value="@model.DateUpdate.ToString()" />
+            <KeyValueCols Key="Profit of 20%" Value="@($"{model.LotMin} lot(s) by price > {model.PriceMin:#,#0.####}")" />
+            <KeyValueCols Key="Profit of 50%" Value="@($"{model.LotMid} lot(s) by price > {model.PriceMid:#,#0.####}")" />
+            <KeyValueCols Key="Profit of 80%" Value="@($"{model.LotMax} lot(s) by price > {model.PriceMax:#,#0.####}")" />
+        }
+        else
+        {
+            <span>@info</span>
+        }
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [Parameter] public long CompanyId { get; set; }
+
+    string info = DefaultString.loading;
+    SummarySellRecommendation model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationStateTask).User;
+
+        string CustomUriBuilder() => SellRecommendationAPI.GetUriSummaryByCompanyId(CompanyId);
+        var queryResult = await apiService.GetResultAsync(user, CustomUriBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

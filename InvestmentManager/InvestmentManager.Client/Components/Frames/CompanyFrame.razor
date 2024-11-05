@@ -1,0 +1,98 @@
+﻿@inject CustomNotification notice
+
+<FrameTemplate Name="@Name" Description="@Description" TitleColor="ColorBootstrap.warning">
+    <InfoBlock>
+        <MultiRow Name="@additionalInfo" IconName="info" Action="(() => isAdditionalInfo = !isAdditionalInfo)" Description="General information about a company" />
+        <MultiRow Name="@transactions" IconName="yen" Action="(() => isTransactions = !isTransactions)" Description="Information about transactions (purchase / sale) for this company on this brokerage account and some summary relevant information" />
+        <MultiRow Name="@rating" IconName="bar-chart" Action="(() => isRating = !isRating )" Description="Information about the calculated rating for this company. A place in the ranking among all. The rating is calculated based on data from reports, multiples and company prices. A comparison is made of homogeneous indicators with the accumulation of information in these comparisons. The results are averaged" />
+        <MultiRow Name="@buyRecommendations" IconName="plus" Action="(() => isBuyRecommendations = !isBuyRecommendations)" Description="The maximum price per share at which it is recommended to buy this company. This price is calculated based on the rating" />
+        <MultiRow Name="@sellRecommendations" IconName="minus" Action="(() => isSellRecommendations = !isSellRecommendations)" Description="The logic of these calculations is based on three stages of profit fixing for this company on this brokerage account, depending on its place in the rating. The first stage is the sale of shares upon reaching a profit: 20% of the value of all existing shares of this company. The number of lots to be sold is calculated depending on the place in the rating. The same is true for the second stage of taking profit at 50%. And the last stage of profit taking - 80%" />
+        <MultiRow Name="@coefficient" IconName="calculator" Action="(() => isCoefficient = !isCoefficient)" Description="Standard market multiples are calculated here based on available reports and prices for this company." />
+        <MultiRow Name="@report" IconName="document" Action="(() => isReport = !isReport )" Description="Here, the necessary historical data from the reports of this company is collected for all calculations in the program" />
+        <MultiRow Name="@price" IconName="graph" Action="(() => isPrice = !isPrice)" Description="Information about the maximum price per day for the last year for this company" />
+        <MultiRow Name="@dividend" IconName="target" Action="(() => isDividend = !isDividend)" Description="History of all dividends received for this company on this brokerage account. Some summary information" />
+        <MultiRow Name="@edit" IconName="pencil" Action="(() => isEdit = !isEdit)" Description="And so everything is clear :)" />
+    </InfoBlock>
+    <ActionBlock>
+        @if (isAdditionalInfo)
+        {
+            <CompanyAdditional InfoName="@additionalInfo" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isAdditionalInfo = isVisible)" />
+        }
+        @if (isTransactions)
+        {
+            <StockTransactionS InfoName="@transactions" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isTransactions = isVisible)" />
+        }
+        @if (isRating)
+        {
+            <RatingS InfoName="@rating" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isRating = isVisible)" />
+        }
+        @if (isBuyRecommendations)
+        {
+            <BuyRecommendationS InfoName="@buyRecommendations" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isBuyRecommendations = isVisible)" />
+        }
+        @if (isSellRecommendations)
+        {
+            <SellRecommendationS InfoName="@sellRecommendations" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isSellRecommendations = isVisible)" />
+        }
+        @if (isCoefficient)
+        {
+            <CoefficientS InfoName="@coefficient" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isCoefficient = isVisible)" />
+        }
+        @if (isReport)
+        {
+            <ReportS InfoName="@report" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isReport = isVisible)" />
+        }
+        @if (isPrice)
+        {
+            <PriceS InfoName="@price" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isPrice = isVisible)" />
+        }
+        @if (isDividend)
+        {
+            <DividendS InfoName="@dividend" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isDividend = isVisible)" />
+        }
+        @if (isEdit)
+        {
+            if (user.IsInRole("pestunov"))
+            {
+                <FormCompanyComplex InfoName="@edit" CompanyId="CompanyId" UpdateVisible="((bool isVisible) => isEdit = isVisible)" />
+            }
+            else
+            {
+                isEdit = false;
+                Task.FromResult(notice.AlertAccessAsync("You are not an admin!"));
+            }
+        }
+    </ActionBlock>
+</FrameTemplate>
+
+@code {
+    [Parameter] public long CompanyId { get; set; }
+    [Parameter] public string Name { get; set; }
+    [Parameter] public string Description { get; set; }
+
+    [CascadingParameter] Task<AuthenticationState> AuthenticationState { get; set; }
+    ClaimsPrincipal user;
+    protected override async Task OnInitializedAsync() => user = (await AuthenticationState).User;
+
+    string additionalInfo = "Additional information";
+    string rating = "Rating details";
+    string transactions = "Transactions";
+    string buyRecommendations = "Recommendation for buy";
+    string sellRecommendations = "Recommendations for sale";
+    string coefficient = "Coefficient history";
+    string report = "Report history";
+    string price = "Price history";
+    string dividend = "Dividend history";
+    string edit = "Edit company";
+
+    bool isAdditionalInfo;
+    bool isRating;
+    bool isTransactions;
+    bool isBuyRecommendations;
+    bool isSellRecommendations;
+    bool isCoefficient;
+    bool isReport;
+    bool isPrice;
+    bool isDividend;
+    bool isEdit;
+}

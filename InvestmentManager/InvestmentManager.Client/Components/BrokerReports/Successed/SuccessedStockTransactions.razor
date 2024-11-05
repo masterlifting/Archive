@@ -1,0 +1,91 @@
+﻿@inject API api
+@inject ICatalogService catalogService
+@inject APIService<StockTransactionModel> apiService
+
+<div class="row">
+    <div class="col-6">
+        <RowTitleSub Text="Stock transactions" />
+    </div>
+    <div class="col-6 text-right">
+        <span class="ilink" @onclick="SaveDataCollection">save all</span>
+    </div>
+</div>
+
+<div class="row icontent small">
+    <div class="col">
+        <div class="row text-info text-nowrap">
+            <div class="col-7">
+                <div class="row">
+                    <div class="col-4">Status</div>
+                    <div class="col-4">Exchange</div>
+                    <div class="col-4">Volume</div>
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="row">
+                    <div class="col-6">Cost by 1</div>
+                    <div class="col-6 text-center">Date</div>
+                </div>
+            </div>
+        </div>
+        @if (stockTransactions is not null)
+        {
+            foreach (var item in stockTransactions
+                  .Join(tickers, x => x.TickerId, y => y.Id, (x, y) => new { Transaction = x, CompanyId = y.CompanyId, Ticker = y.Name })
+                  .Join(companies, x => x.CompanyId, y => y.Id, (x, y) => new
+                  {
+                      x.Transaction,
+                      x.Ticker,
+                      Company = y.Name
+                  }))
+            {
+                string color = catalogService.GetStatusBootstrapColor(item.Transaction.StatusId);
+                string status = catalogService.GetStatusName(item.Transaction.StatusId);
+                string exchange = catalogService.GetExchangeName(item.Transaction.ExchangeId);
+
+                <div class="row ilink" @onclick="(() => SaveData(item.Transaction))">
+                    <div class="col-12">@item.Ticker | @item.Company</div>
+                    <div class="col-7">
+                        <div class="row text-@color">
+                            <div class="col-4">@status</div>
+                            <div class="col-4">@exchange</div>
+                            <div class="col-4">@item.Transaction.Quantity</div>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="row text-@color.ToString()">
+                            <div class="col-6 px-0">@item.Transaction.Cost</div>
+                            <div class="col-6 px-0 text-center">@item.Transaction.DateOperation.ToShortDateString()</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<StockTransactionModel> StockTransactions { get; set; }
+
+    List<StockTransactionModel> stockTransactions { get; set; }
+    List<TickerModel> tickers;
+    List<ShortView> companies;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        tickers = await api.Ticker.Value.GeTickersAsync();
+        companies = await api.Company.Value.GetShortCompaniesAsync();
+
+        if (tickers != default && companies != default)
+            stockTransactions = StockTransactions;
+
+        await base.OnParametersSetAsync();
+    }
+    async Task SaveData(StockTransactionModel transaction) =>
+        await apiService.PostDataAsync(transaction, stockTransactions, "stocktransactions", "Stock transaction");
+    async Task SaveDataCollection()
+    {
+        stockTransactions = stockTransactions.OrderBy(x => x.DateOperation).ToList();
+        await apiService.PostDataCollectionAsync(stockTransactions, "stocktransactions", "Stock transactions");
+    }
+}

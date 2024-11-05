@@ -1,0 +1,58 @@
+﻿@page "/register"
+@inject InvestmentManager.Client.Services.AuthenticationConfiguration.IAuthenticationService authenticationService
+@inject NavigationManager navigation
+
+<div class="row" style="margin-top:30vh">
+    <EditForm class="offset-md-4 col-md-4 col isecodary iframe" Model="registerModel" OnValidSubmit="HandleRegistration">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        @if (withErrors)
+        {
+            foreach (var error in errors)
+            {
+                <div class="row validation-message">
+                    <div class="col">@error</div>
+                </div>
+            }
+        }
+        <div class="row">
+            <div class="col ">
+                <InputText type="email" placeholder="email" @bind-Value="registerModel.Email" />
+            </div>
+        </div>
+
+        <div class="row my-2">
+            <div class="col">
+                <InputText type="password" placeholder="password" @bind-Value="registerModel.Password" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <InputText type="password" placeholder="repeat password" @bind-Value="registerModel.PasswordConfirm" />
+            </div>
+        </div>
+
+        <ButtonSubmit Title="Register" Color="ColorCustom.isuccess" />
+    </EditForm>
+</div>
+
+@code {
+    RegisterModel registerModel = new RegisterModel();
+    bool withErrors;
+    IEnumerable<string> errors;
+
+    async Task HandleRegistration()
+    {
+        withErrors = false;
+        var result = await authenticationService.RegisterAsync(registerModel);
+
+        if (result.IsSuccess)
+            navigation.NavigateTo("/");
+        else
+        {
+            errors = result.Info.Split(';');
+            withErrors = true;
+        }
+    }
+}

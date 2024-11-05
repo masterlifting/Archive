@@ -1,0 +1,108 @@
+﻿@inject API api
+@inject CustomNotification notice
+
+<RowTitleSub Text="Company" />
+@if (editContext is not null)
+{
+    <EditForm EditContext="editContext">
+        <DataAnnotationsValidator />
+        <div class="row mt-1 align-items-center">
+            <div class="col">
+                <ValidationMessage For="(() => company.Name)" />
+                <InputText placeholder="Enter company name (required)" @bind-Value="company.Name" />
+            </div>
+        </div>
+        <div class="row mt-1 align-items-center">
+            <div class="col-3">Sector</div>
+            <div class="col-9">
+                <ValidationMessage For="(() => company.SectorId)" />
+                <InputSelect @bind-Value="company.SectorId">
+                    @foreach (var sector in sectors)
+                        {
+                        <option value="@sector.Id">@sector.Name</option>
+                        }
+                </InputSelect>
+            </div>
+        </div>
+        <div class="row mt-1 align-items-center">
+            <div class="col-3">Industry</div>
+            <div class="col-9">
+                <ValidationMessage For="(() => company.IndustryId)" />
+                <InputSelect @bind-Value="company.IndustryId">
+                    @foreach (var industry in industries)
+                        {
+                        <option value="@industry.Id">@industry.Name</option>
+                        }
+                </InputSelect>
+            </div>
+        </div>
+        <div class="row mt-1 align-items-center">
+            <div class="col-3 text-nowrap">Date split</div>
+            <div class="col-9">
+                <ValidationMessage For="(() => company.DateSplit)" />
+                <InputDate @bind-Value="company.DateSplit" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <ButtonAction Color="ColorCustom.idark" ClickAction="SaveClose" Title="Save and close" />
+            </div>
+            <div class="col-6">
+                <ButtonAction Color="ColorCustom.isuccess" ClickAction="SaveNext" Title="Save and next" />
+            </div>
+        </div>
+    </EditForm>
+}
+else
+{
+    <span>@DefaultString.loading</span>
+}
+
+@code {
+    [Parameter] public long? CompanyId { get; set; }
+    [Parameter] public EventCallback<(int, long)> FirstStep { get; set; }
+
+    List<ShortView> industries;
+    List<ShortView> sectors;
+    CompanyModel company;
+    EditContext editContext;
+
+    protected override async Task OnInitializedAsync()
+    {
+        industries = await api.Industry.Value.GetIndustriesAsync();
+        sectors = await api.Sector.Value.GetSectorsAsync();
+
+        if (industries != default && sectors != default)
+        {
+            if (CompanyId.HasValue)
+                company = await api.Company.Value.GetCompanyAsync(CompanyId.Value);
+
+            if (company == default)
+                company = new CompanyModel();
+
+            editContext = new EditContext(company);
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    async Task SaveClose() => await FormSubmit(200);
+    async Task SaveNext() => await FormSubmit(1);
+    async Task FormSubmit(int step)
+    {
+        if (editContext.Validate())
+        {
+            var result = CompanyId.HasValue 
+                ? await api.Company.Value.EditAsync(CompanyId.Value, company) 
+                : await api.Company.Value.AddNewAsync(company);
+
+            if (result.IsSuccess)
+            {
+                await notice.AlertSuccesAsync(result.Info);
+                await FirstStep.InvokeAsync((step, result.ResultId));
+            }
+            else
+                notice.ToastDanger("Errors", result.Info);
+        }
+    }
+}

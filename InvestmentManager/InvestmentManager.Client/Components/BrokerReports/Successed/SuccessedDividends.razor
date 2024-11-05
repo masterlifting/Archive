@@ -1,0 +1,76 @@
+﻿@inject API api
+@inject APIService<DividendModel> apiService
+
+<div class="row">
+    <div class="col-6">
+        <RowTitleSub Text="Dividends" />
+    </div>
+    <div class="col-6 text-right">
+        <span class="ilink" @onclick="SaveDataCollection">save all</span>
+    </div>
+</div>
+
+<div class="row icontent small">
+    <div class="col">
+        <div class="row text-info text-nowrap">
+            <div class="col-7">
+                <div class="row">
+                    <div class="col">Company</div>
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="row">
+                    <div class="col-6 px-0">Sum</div>
+                    <div class="col-6 px-0 text-center">Date</div>
+                </div>
+            </div>
+        </div>
+        @if (dividends is not null)
+        {
+            foreach (var item in dividends
+            .Join(isins, x => x.IsinId, y => y.Id, (x, y) => new { Dividend = x, CompanyId = y.CompanyId })
+            .Join(companies, x => x.CompanyId, y => y.Id, (x, y) => new { x.Dividend, Company = y.Name }))
+            {
+                <div class="row text-success ilink" @onclick="(() => SaveData(item.Dividend))">
+                    <div class="col-7">
+                        <div class="row">
+                            <div class="col">@item.Company</div>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="row">
+                            <div class="col-6 px-0">@item.Dividend.Amount</div>
+                            <div class="col-6 px-0 text-center">@item.Dividend.DateOperation.ToShortDateString()</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<DividendModel> Dividends { get; set; }
+
+    List<DividendModel> dividends { get; set; }
+    List<IsinModel> isins;
+    List<ShortView> companies;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isins = await api.Isin.Value.GetIsinsAsync();
+        companies = await api.Company.Value.GetShortCompaniesAsync();
+
+        if (isins != default && companies != default)
+            dividends = Dividends;
+
+        await base.OnParametersSetAsync();
+    }
+    async Task SaveData(DividendModel dividend) =>
+        await apiService.PostDataAsync(dividend, dividends, "dividends", "Divivend");
+    async Task SaveDataCollection()
+    {
+        dividends = dividends.OrderBy(x => x.DateOperation).ToList();
+        await apiService.PostDataCollectionAsync(dividends, "dividends", "Dividends");
+    }
+}

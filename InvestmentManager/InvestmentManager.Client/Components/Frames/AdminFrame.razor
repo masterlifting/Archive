@@ -1,0 +1,90 @@
+﻿@inject API api
+@inject CustomNotification notice
+@inject NavigationManager navigation
+
+<FrameTemplate Theme="ColorCustom.idanger" Name="Administrator" TitleColor="ColorBootstrap.light">
+    <InfoBlock>
+        <MultiRow Name="Reset summary" IconName="calculator" Action="ResetSummary" Description="All balances values are recalculated" />
+        <MultiRow Name="Reset calculator" IconName="calculator" Action="ResetCalculator" Description="All calculated values are recalculated" />
+        <MultiRow Name="Load prices" IconName="script" Action="ParsePrices" Description="Receives missing prices to date for all companies from exchanges" />
+        <MultiRow Name="Load reports" IconName="document" Action="ParseReports" Description="Parses data from public company reports from websites" />
+        <MultiRow Name="Check reports" IconName="check" Action="CheckParsedReports" Description="Checks the validity of data from received reports and saves to the database" />
+        <MultiRow Name="@addCompany" IconName="file" Action="AddCompany" Description="And so everything is clear :)" />
+    </InfoBlock>
+    <ActionBlock>
+        @if (isAddingCompany)
+        {
+            <FormCompanyComplex InfoName="@addCompany" CompanyId="null" UpdateVisible="((bool isVisible) => isAddingCompany = isVisible)" />
+        }
+    </ActionBlock>
+</FrameTemplate>
+
+@code {
+    string addCompany = "Add new company";
+    bool isAddingCompany;
+
+    [CascadingParameter] Task<AuthenticationState> AuthenticationState { get; set; }
+
+    async Task ResetCalculator()
+    {
+        if (await IsAdmin())
+        {
+            var result = await api.Service.Value.ResetCalculatorDataAsync();
+
+            if (result.IsSuccess)
+                notice.ToastSuccess("Calculator info", result.Info);
+            else
+                notice.ToastDanger("Calculator info", result.Info);
+        }
+    }
+    async Task ResetSummary()
+    {
+        if (await IsAdmin())
+        {
+            var result = await api.Service.Value.ResetSummaryDataAsync();
+
+            if (result.IsSuccess)
+                notice.ToastSuccess("Summary info", result.Info);
+            else
+                notice.ToastDanger("Summary info", result.Info);
+        }
+    }
+    async Task ParsePrices()
+    {
+        if (await IsAdmin())
+        {
+            var result = await api.Service.Value.ParsePricesAsync();
+
+            if (result.IsSuccess)
+                notice.ToastSuccess("Parse prices result", result.Info);
+            else
+                notice.ToastDanger("Parse prices result", result.Info);
+        }
+    }
+    async Task ParseReports()
+    {
+        if (await IsAdmin())
+            await api.Service.Value.ParseReportsAsync();
+    }
+    async Task CheckParsedReports()
+    {
+        if (await IsAdmin())
+            navigation.NavigateTo("/companyreportforms");
+    }
+    async Task AddCompany()
+    {
+        if (await IsAdmin())
+            isAddingCompany = !isAddingCompany;
+    }
+    async Task<bool> IsAdmin()
+    {
+        bool result = false;
+
+        if ((await AuthenticationState).User.IsInRole("pestunov"))
+            result = true;
+        else
+            await notice.AlertAccessAsync("You are not an admin!");
+
+        return result;
+    }
+}

@@ -1,0 +1,7 @@
+﻿<button type="button" @onclick="ClickAction" class="w-100 mt-2 @Color.ToString() iconvex">@Title</button>
+
+@code{
+    [Parameter] public string Title { get; set; }
+    [Parameter] public ColorCustom Color { get; set; }
+    [Parameter] public EventCallback ClickAction { get; set; }
+}

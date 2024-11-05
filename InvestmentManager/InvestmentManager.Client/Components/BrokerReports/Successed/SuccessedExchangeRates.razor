@@ -1,0 +1,69 @@
+﻿@inject ICatalogService catalogService
+@inject APIService<ExchangeRateModel> apiService
+
+<div class="row">
+    <div class="col-6">
+        <RowTitleSub Text="Exchange rates" />
+    </div>
+    <div class="col-6 text-right">
+        <span class="ilink" @onclick="SaveDataCollection">save all</span>
+    </div>
+</div>
+
+<div class="row icontent small">
+    <div class="col">
+        <div class="row text-info text-nowrap">
+            <div class="col-7">
+                <div class="row">
+                    <div class="col-8">Status</div>
+                    <div class="col-4">Rate</div>
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="row">
+                    <div class="col-6">Volume</div>
+                    <div class="col-6 text-center">Date</div>
+                </div>
+            </div>
+        </div>
+
+        @foreach (var rate in exchangeRates)
+        {
+            string color = catalogService.GetStatusBootstrapColor(rate.StatusId);
+            string status = catalogService.GetStatusName(rate.StatusId);
+
+            <div class="row ilink text-@color" @onclick="(() => SaveData(rate))">
+                <div class="col-7">
+                    <div class="row">
+                        <div class="col-8">@status</div>
+                        <div class="col-4">@rate.Rate</div>
+                    </div>
+                </div>
+                <div class="col-5">
+                    <div class="row">
+                        <div class="col-6">@rate.Quantity</div>
+                        <div class="col-6 text-center">@rate.DateOperation.ToShortDateString()</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<ExchangeRateModel> ExchangeRates { get; set; }
+    List<ExchangeRateModel> exchangeRates { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        exchangeRates = ExchangeRates;
+        base.OnParametersSet();
+    }
+    async Task SaveData(ExchangeRateModel exchangeRate) =>
+        await apiService.PostDataAsync(exchangeRate, exchangeRates, "exchangerates", "Exchange rate");
+    async Task SaveDataCollection()
+    {
+        exchangeRates = exchangeRates.OrderBy(x => x.DateOperation).ToList();
+        await apiService.PostDataCollectionAsync(exchangeRates, "exchangerates", "Exchange rates");
+    }
+}

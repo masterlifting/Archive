@@ -1,0 +1,32 @@
+﻿@page "/brokerreports"
+@inject ILocalStorageService localStorage
+@inject CustomNotification notice
+@attribute [Authorize]
+
+@if (model != null)
+{
+    if (model.Errors.Any())
+    {
+        <ReportErrors Errors="@model.Errors" />
+    }
+    else if (model.Reports.Any())
+    {
+        <ReportSuccessed Reports="@model.Reports" />
+    }
+    else
+        Task.FromResult(notice.AlertInfoAsync("Out of new data"));
+}
+
+@code
+{
+    BrokerReportModel model;
+    [CascadingParameter] Task<AuthenticationState> AuthenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationState).User;
+        model = await localStorage.GetItemAsync<BrokerReportModel>($"{user.Identity.Name}_{DefaultString.Id.brokerReport}");
+
+        notice.LoadStop();
+    }
+}

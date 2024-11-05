@@ -1,0 +1,40 @@
+﻿@inject APIService<SummaryCoefficient> apiService
+
+<InfoTemplate InfoName="@InfoName" VisibleAction="((bool isVisible) => UpdateVisible.InvokeAsync(isVisible))">
+    <ChildContent>
+
+        @if (model is not null)
+        {
+            <KeyValueCols Key="Date update" Value="@model.DateUpdate.ToString()" />
+            <KeyValueCols Key="Quarter count" Value="@model.Count.ToString()" />
+            <KeyValueCols Key="Multiplicators" Value="@model.Multiplcators" />
+
+            <div class="col">
+                <CoefficientF CompanyId="CompanyId" />
+            </div>
+        }
+        else
+        {
+            <span>@info</span>
+        }
+
+    </ChildContent>
+</InfoTemplate>
+
+@code{
+    [Parameter] public EventCallback<bool> UpdateVisible { get; set; }
+    [Parameter] public string InfoName { get; set; }
+    [Parameter] public long CompanyId { get; set; }
+
+    string info = DefaultString.loading;
+    SummaryCoefficient model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string CustomUriBuilder() => CoefficientAPI.GetUriSummaryByCompanyId(CompanyId);
+        var queryResult = await apiService.GetResultAsync(CustomUriBuilder);
+
+        model = queryResult.ResultContent;
+        info = queryResult.ResultInfo;
+    }
+}

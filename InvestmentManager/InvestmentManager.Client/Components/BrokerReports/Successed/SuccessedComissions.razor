@@ -1,0 +1,70 @@
+﻿@inject API api
+@inject APIService<ComissionModel> apiService
+
+<div class="row">
+    <div class="col-6">
+        <RowTitleSub Text="Comissions" />
+    </div>
+    <div class="col-6 text-right">
+        <span class="ilink" @onclick="SaveDataCollection">save all</span>
+    </div>
+</div>
+
+<div class="row icontent small">
+    <div class="col">
+        <div class="row text-info text-nowrap">
+            <div class="col-7">
+                <div class="row">
+                    <div class="col">Type</div>
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="row">
+                    <div class="col-6 px-0">Sum</div>
+                    <div class="col-6 px-0 text-center">Date</div>
+                </div>
+            </div>
+        </div>
+        @if (comissions is not null)
+        {
+            foreach (var item in comissions.Join(comissionTypes, x => x.TypeId, y => y.Id, (x, y) => new { Comission = x, Type = y.Name }))
+            {
+                <div class="row text-danger ilink" @onclick="(() => SaveData(item.Comission))">
+                    <div class="col-7">
+                        <div class="row">
+                            <div class="col">@item.Type</div>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="row">
+                            <div class="col-6 px-0">@item.Comission.Amount</div>
+                            <div class="col-6 px-0 text-center">@item.Comission.DateOperation.ToShortDateString()</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<ComissionModel> Comissions { get; set; }
+    List<ComissionModel> comissions { get; set; }
+    List<ShortView> comissionTypes;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        comissionTypes = await api.Catalog.Value.GetComissionTypesAsync();
+        if (comissionTypes != default)
+            comissions = Comissions;
+
+        await base.OnParametersSetAsync();
+    }
+    async Task SaveData(ComissionModel comission) =>
+    await apiService.PostDataAsync(comission, comissions, "comissions", "Comission");
+    async Task SaveDataCollection()
+    {
+        comissions = comissions.OrderBy(x => x.DateOperation).ToList();
+        await apiService.PostDataCollectionAsync(comissions, "comissions", "Comissions");
+    }
+}
